@@ -29,6 +29,10 @@ add_executable(ChassisPilot src/chassis_pilot.cpp)
 ament_target_dependencies(ChassisPilot rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(ChassisPilot PRIVATE include)
 
+add_executable(MissionTwo src/mission_two.cpp)
+ament_target_dependencies(MissionTwo rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
+target_include_directories(MissionTwo PRIVATE include)
+
 add_executable(SimLower src/sim_lower.cpp)
 target_include_directories(SimLower PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -38,6 +42,7 @@ install(TARGETS
   SimLower
   SpeedPublisher
   ChassisPilot
+  MissionTwo
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include)

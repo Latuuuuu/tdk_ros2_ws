@@ -33,7 +33,8 @@ private:
     void position_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
         x_ = msg->pose.pose.position.x;
         y_ = msg->pose.pose.position.y;
-        yaw_ = quat_to_yaw(msg->pose.pose.orientation);
+        // yaw_ = quat_to_yaw(msg->pose.pose.orientation);
+        yaw_ = msg->pose.pose.orientation.z; 
 
         vx_meas_ = msg->twist.twist.linear.x;
         vy_meas_ = msg->twist.twist.linear.y;
@@ -49,7 +50,8 @@ private:
     void set_goal(const std::shared_ptr<interfaces::srv::GoalPoint::Request> request,const std::shared_ptr<interfaces::srv::GoalPoint::Response> response){
         goal_x_ = request->goal.pose.position.x;
         goal_y_ = request->goal.pose.position.y;
-        goal_yaw_ = quat_to_yaw(request->goal.pose.orientation);
+        // goal_yaw_ = quat_to_yaw(request->goal.pose.orientation);
+        goal_yaw_ = request->goal.pose.orientation.z; 
 
         update_dist();
 
@@ -57,7 +59,7 @@ private:
         response->status = done;        
         have_goal_ = !done;
 
-        RCLCPP_INFO(this->get_logger(), "Goal Set: x=%.2f, y=%.2f, yaw=%.2f", goal_x_, goal_y_, goal_yaw_);   
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal Set: x=%.2f, y=%.2f, yaw=%.2f", goal_x_, goal_y_, goal_yaw_);   
     }
 
     void publish_velocity() {
@@ -73,6 +75,8 @@ private:
         if(complete_goal()) {
             reset_twist(msg);
             velocity_publisher_->publish(msg);
+            auto response = std::make_shared<interfaces::srv::GoalPoint::Response>();
+            response->status = true;
             have_goal_ = false;
             RCLCPP_INFO(this->get_logger(), "Goal reached. Stopping.");
             return; // 已到達目標
@@ -168,7 +172,7 @@ private:
     int log_throttle_ms_ {200};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {0.0}, yaw_buffer_ {0.0};
-    double max_linear_speed_ {0.8}, max_angular_speed_ {1.5}, linear_acceleration_ {0.0}, angular_acceleration_ {0.0};
+    double max_linear_speed_ {1.0}, max_angular_speed_ {1.5}, linear_acceleration_ {0.5}, angular_acceleration_ {0.5};
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr     velocity_publisher_;

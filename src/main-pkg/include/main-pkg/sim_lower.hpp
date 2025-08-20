@@ -36,11 +36,11 @@ private:
     last_step_time_ = current_time;
 
     // 積分計算位移
-    const double c = std::cos(yaw_), s = std::sin(yaw_);
-    x_ += (vx_ * c - vy_ * s) * dt;
-    y_ += (vx_ * s + vy_ * c) * dt;
+    // const double c = std::cos(yaw_), s = std::sin(yaw_);
+    x_ += vx_ * dt;
+    y_ += vy_ * dt;
     yaw_ += wz_ * dt;
-    yaw_ = normalize_angle(yaw_);
+    yaw_ = ang_norm(yaw_);
 
     // 發佈里程計
     nav_msgs::msg::Odometry odom;
@@ -49,18 +49,18 @@ private:
     odom.child_frame_id = child_frame_id_;
     odom.pose.pose.position.x = x_;
     odom.pose.pose.position.y = y_;
-    odom.pose.pose.orientation = yaw_to_quaternion(yaw_);
+    odom.pose.pose.orientation.z = yaw_;
     odom.twist.twist.linear.x = vx_;
     odom.twist.twist.linear.y = vy_;
     odom.twist.twist.angular.z = wz_;
     pub_odom_->publish(odom);
   }
 
-  static double normalize_angle(double angle) {
-    while (angle > M_PI) angle -= 2.0 * M_PI;
-    while (angle < -M_PI) angle += 2.0 * M_PI;
-    return angle;
-  }
+  static double ang_norm(double a) {
+        while (a >  M_PI) a -= 2.0 * M_PI;
+        while (a < -M_PI) a += 2.0 * M_PI;
+        return a;
+    }
 
   static geometry_msgs::msg::Quaternion yaw_to_quaternion(double yaw) {
     geometry_msgs::msg::Quaternion q;
