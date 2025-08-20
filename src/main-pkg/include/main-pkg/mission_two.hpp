@@ -29,22 +29,28 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        geometry_msgs::msg::PoseStamped goal1;
-        goal1.pose.position.x = 10.0;
-        goal1.pose.position.y = 0.0;
-        goal1.pose.orientation.z = 0.0; // 無旋轉
+        Goal goal1;
+        goal1.pose.pose.position.x = 10.0;
+        goal1.pose.pose.position.y = 0.0;
+        goal1.pose.pose.orientation.z = 0.0;
+        goal1.max_linear_speed = 1.0;
+        goal1.max_angular_speed = 0.0;
         goals_.push_back(goal1);
 
-        geometry_msgs::msg::PoseStamped goal2;
-        goal2.pose.position.x = 20.0;
-        goal2.pose.position.y = 10.0;
-        goal2.pose.orientation.z = 3.14; // 無旋轉
+        Goal goal2;
+        goal2.pose.pose.position.x = 20.0;
+        goal2.pose.pose.position.y = 10.0;
+        goal2.pose.pose.orientation.z = 3.14;
+        goal2.max_linear_speed = 0.5; 
+        goal2.max_angular_speed = 0.5;
         goals_.push_back(goal2);
 
-        geometry_msgs::msg::PoseStamped goal3;
-        goal3.pose.position.x = 0.0;
-        goal3.pose.position.y = 0.0;
-        goal3.pose.orientation.z = 0.0; // 無旋轉
+        Goal goal3;
+        goal3.pose.pose.position.x = 0.0;
+        goal3.pose.pose.position.y = 0.0;
+        goal3.pose.pose.orientation.z = 0.0;
+        goal3.max_linear_speed = 2.0; 
+        goal3.max_angular_speed = 0.5;
         goals_.push_back(goal3);
     }
 
@@ -63,7 +69,9 @@ private:
 
         // 發送下一個目標
         auto request = std::make_shared<interfaces::srv::GoalPoint::Request>();
-        request->goal = goals_.front();
+        request->goal = goals_.front().pose;
+        request->max_linear_speed = goals_.front().max_linear_speed;
+        request->max_angular_speed = goals_.front().max_angular_speed;
 
         // 呼叫服務
         auto future = goal_client_->async_send_request(
@@ -86,9 +94,15 @@ private:
         waiting_for_response_ = false;
     }
 
+    struct Goal {
+        geometry_msgs::msg::PoseStamped pose;
+        double max_linear_speed;
+        double max_angular_speed;
+    };
+
     // 成員變數
     rclcpp::Client<interfaces::srv::GoalPoint>::SharedPtr goal_client_;
     rclcpp::TimerBase::SharedPtr timer_;
-    std::vector<geometry_msgs::msg::PoseStamped> goals_;
+    std::vector<Goal> goals_;
     bool waiting_for_response_{false};
 };

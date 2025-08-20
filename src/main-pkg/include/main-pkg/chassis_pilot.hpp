@@ -53,6 +53,9 @@ private:
         // goal_yaw_ = quat_to_yaw(request->goal.pose.orientation);
         goal_yaw_ = request->goal.pose.orientation.z; 
 
+        max_linear_speed_ = request->max_linear_speed;
+        max_angular_speed_ = request->max_angular_speed;
+
         update_dist();
 
         const bool done = complete_goal();
@@ -168,7 +171,7 @@ private:
     double goal_x_ {0.0},goal_y_ {0.0},goal_yaw_ {0.0};
     bool have_goal_ {false};
     //parameter
-    double pos_tol_ {0.02}, yaw_tol_ {0.03};
+    double pos_tol_ {0.02}, yaw_tol_ {0.01};
     int log_throttle_ms_ {200};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {0.0}, yaw_buffer_ {0.0};
