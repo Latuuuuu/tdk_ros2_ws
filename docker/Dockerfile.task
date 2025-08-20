@@ -45,13 +45,19 @@ RUN apt-get update \
     ros-humble-ament-cmake \
     ros-humble-rqt-plot \
     ros-humble-rqt-tf-tree \
-    ros-humble-nav2-msgs && \
-    rm -rf /var/lib/apt/lists/*
+    ros-humble-nav2-msgs  \
+    ros-humble-rviz2 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get dist-upgrade -y \
     && apt-get autoremove -y \
     && apt-get autoclean -y \
     && rm -rf /var/lib/apt/lists/*
+
+    # 自動 source ROS 環境
+RUN echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \
+ && echo '[ -f /home/'"$USERNAME"'/tdk_ros2_ws/install/setup.bash ] && source /home/'"$USERNAME"'/tdk_ros2_ws/install/setup.bash' >> /home/$USERNAME/.bashrc \
+ && chown $USERNAME:$USERNAME /home/$USERNAME/.bashrc
 
 ENV SHELL=/bin/bash
 ENV TERM=xterm-256color

@@ -12,8 +12,8 @@ public:
   {
     // ===== 參數 =====
     period_ms_        = declare_parameter<int>("period_ms", 20);          // 模擬步長(ms)
-    cmd_topic_        = declare_parameter<std::string>("cmd_topic", "cmd_vel");
-    odom_topic_       = declare_parameter<std::string>("odom_topic", "/odom");
+    cmd_topic_        = declare_parameter<std::string>("cmd_topic", "/robot/cmd_vel");
+    odom_topic_       = declare_parameter<std::string>("odom_topic", "/robot/pose");
     allow_holonomic_  = declare_parameter<bool>("allow_holonomic", true);
 
     // 速度/加速度上限（模擬本體硬體能力）
@@ -45,6 +45,8 @@ public:
 
     // 計時器
     set_timer_();
+
+    RCLCPP_INFO(this->get_logger(), "Clock type: %d", this->get_clock()->get_clock_type());
 
     last_step_time_ = now();
   }
@@ -138,7 +140,7 @@ private:
   // 參數
   int period_ms_{20}, cmd_timeout_ms_{500}, log_throttle_ms_{200};
   bool allow_holonomic_{true};
-  std::string cmd_topic_{"cmd_vel"}, odom_topic_{"/odom"};
+  std::string cmd_topic_{"/robot/cmd_vel"}, odom_topic_{"/robot/pose"};
   std::string frame_id_{"odom"}, child_frame_id_{"base_link"};
   double v_lin_max_{1.2}, v_ang_max_{2.5};
   double a_lin_max_{3.0}, a_ang_max_{6.0};

@@ -16,12 +16,13 @@ find_package(geometry_msgs REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(nav_msgs REQUIRED)               
 find_package(visualization_msgs REQUIRED) 
+find_package(interfaces REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
 add_executable(SpeedPublisher src/speed_publisher.cpp)
-ament_target_dependencies(SpeedPublisher rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs)
+ament_target_dependencies(SpeedPublisher rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(SpeedPublisher PRIVATE include)
 
 add_executable(SimLower src/sim_lower.cpp)
@@ -36,10 +37,11 @@ install(TARGETS
 
 install(DIRECTORY include/ DESTINATION include)
 
-# install(DIRECTORY 
-#     launch
-#     DESTINATION share/${PROJECT_NAME}
-# )
+install(DIRECTORY 
+    launch
+    rviz 
+    DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

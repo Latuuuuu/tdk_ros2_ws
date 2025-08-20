@@ -74,18 +74,6 @@ services:
         - $PWD/../src/opencv-pkg:/home/opencv/tdk_ros2_ws/src/opencv_ros
     command: bash
   
-  micro-ros-agent:
-    image: microros/micro-ros-agent:humble
-    container_name: micro-ros-agent
-    network_mode: host
-    devices:
-      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF3833554B3043185746-if02:/dev/ttyAgent
-    command: >
-      serial --dev /dev/ttyAgent --baudrate 115200 -v6
-    group_add:
-      - dialout
-    restart: unless-stopped
-    
   task:
     build:
       context: .
@@ -101,6 +89,7 @@ services:
     privileged: true
     network_mode: host
     working_dir: /home/abao/tdk_ros2_ws
+    entrypoint: ["/bin/bash","-lc"]
     environment:
       - DISPLAY=${DISPLAY}
       - XAUTHORITY=/home/abao/.Xauthority
@@ -113,4 +102,18 @@ services:
       - ../:/home/abao/tdk_ros2_ws
       - ${HOME}/.Xauthority:/home/abao/.Xauthority:ro
     command: /bin/bash
+
+  # micro-ros-agent:
+  #   image: microros/micro-ros-agent:humble
+  #   container_name: micro-ros-agent
+  #   network_mode: host
+  #   devices:
+  #     - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF3833554B3043185746-if02:/dev/ttyAgent
+  #   command: >
+  #     serial --dev /dev/ttyAgent --baudrate 115200 -v6
+  #   group_add:
+  #     - dialout
+  #   restart: unless-stopped
+    
+
 
