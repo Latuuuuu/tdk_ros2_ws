@@ -10,15 +10,16 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/opencv_ros/asset', ['asset/template.png','asset/example.png','asset/example2.png']),
     ],
     entry_points={
         'console_scripts': [
             'orange = opencv_ros.orange:main',  # Example entry point
             'coffee = opencv_ros.coffee:main',  # Coffee entry point
+            'table = opencv_ros.table:main',    # Table entry point
         ],
     },
     install_requires=['setuptools', 'opencv-python', 'cv_bridge', 'rclpy', 'numpy'],
     zip_safe=True,
     maintainer='CYH',
-    description='TDK camera opencv example',
-)
+    description='TDK camera opencv example')

@@ -172,10 +172,10 @@ private:
     bool have_goal_ {false};
     //parameter
     double pos_tol_ {0.02}, yaw_tol_ {0.01};
-    int log_throttle_ms_ {200};
+    int log_throttle_ms_ {2000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
-    double dist_buffer_ {0.0}, yaw_buffer_ {0.0};
-    double max_linear_speed_ {1.0}, max_angular_speed_ {1.5}, linear_acceleration_ {0.5}, angular_acceleration_ {0.5};
+    double dist_buffer_ {0.5}, yaw_buffer_ {0.5};
+    double max_linear_speed_ {1.0}, max_angular_speed_ {1.5}, linear_acceleration_ {0.1}, angular_acceleration_ {0.1};
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr     velocity_publisher_;

@@ -9,6 +9,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "interfaces/srv/goal_point.hpp"
 #include "interfaces/srv/menu.hpp"
+#include "interfaces/srv/key_visual.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
 class MissionTwo : public rclcpp::Node {
@@ -16,7 +17,8 @@ public:
     MissionTwo() : Node("mission_2") {
         // 建立目標點的 client
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
-        menu_client_ = this->create_client<interfaces::srv::Menu>("/start");
+        menu_client_ = this->create_client<interfaces::srv::Menu>("/menu");
+        table_client_ = this->create_client<interfaces::srv::KeyVisual>("/table");
 
         // 初始化目標點序列
         initialize_goals();
@@ -41,27 +43,41 @@ private:
         goals_.push_back(goal1);
 
         Goal goal2;
-        goal2.type = 1;
-        goal2.start = true;
+        goal2.type = 0;
+        goal2.pose.pose.position.x = -10.0;
+        goal2.pose.pose.position.y = -10.0;
+        goal2.pose.pose.orientation.z = 0.0;
+        goal2.max_linear_speed = 1.0;
+        goal2.max_angular_speed = 0.0;
         goals_.push_back(goal2);
 
         Goal goal3;
-        goal3.type = 0;
-        goal3.pose.pose.position.x = 20.0;
-        goal3.pose.pose.position.y = 10.0;
-        goal3.pose.pose.orientation.z = 3.14;
-        goal3.max_linear_speed = 0.5; 
-        goal3.max_angular_speed = 0.5;
+        goal3.type = 1;
+        goal3.start = 1;
         goals_.push_back(goal3);
 
         Goal goal4;
         goal4.type = 0;
-        goal4.pose.pose.position.x = 0.0;
-        goal4.pose.pose.position.y = 0.0;
-        goal4.pose.pose.orientation.z = 0.0;
-        goal4.max_linear_speed = 2.0; 
+        goal4.pose.pose.position.x = 20.0;
+        goal4.pose.pose.position.y = 10.0;
+        goal4.pose.pose.orientation.z = 3.14;
+        goal4.max_linear_speed = 1.0; 
         goal4.max_angular_speed = 0.5;
         goals_.push_back(goal4);
+
+        Goal goal5;
+        goal5.type = 2;
+        goal5.start = 1;
+        goals_.push_back(goal5);
+
+        Goal goal6;
+        goal6.type = 0;
+        goal6.pose.pose.position.x = 0.0;
+        goal6.pose.pose.position.y = 0.0;
+        goal6.pose.pose.orientation.z = 0.0;
+        goal6.max_linear_speed = 2.0; 
+        goal6.max_angular_speed = 0.5;
+        goals_.push_back(goal6);
     }
 
     void check_and_send_goal() {
@@ -80,13 +96,21 @@ private:
         // 發送下一個目標
         if(goals_.front().type == 1) {
             // 如果是攝影機目標，則呼叫攝影機服務
+            if (!menu_client_->wait_for_service(std::chrono::seconds(1))) {
+                RCLCPP_WARN(this->get_logger(), "Menu service not available yet...");
+                return; 
+            }
             auto request = std::make_shared<interfaces::srv::Menu::Request>();
             request->start = goals_.front().start;
             auto future = menu_client_->async_send_request(request,std::bind(&MissionTwo::menu_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Sent camera goal: start=%s", request->start ? "true" : "false");
-        } else {
+        } else if(goals_.front().type == 0){
             // 如果是底盤目標，則呼叫底盤服務
+            if (!goal_client_->wait_for_service(std::chrono::seconds(1))) {
+                RCLCPP_WARN(this->get_logger(), "GoalPoint service not available yet...");
+                return;
+            }
             auto request = std::make_shared<interfaces::srv::GoalPoint::Request>();
             request->goal = goals_.front().pose;
             request->max_linear_speed = goals_.front().max_linear_speed;
@@ -94,6 +118,17 @@ private:
             auto future = goal_client_->async_send_request(request,std::bind(&MissionTwo::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
+        }else{
+            // 如果是桌子目標，則呼叫桌子服務
+            if (!table_client_->wait_for_service(std::chrono::seconds(1))) {
+                RCLCPP_WARN(this->get_logger(), "Table service not available yet...");
+                return;
+            }
+            auto request = std::make_shared<interfaces::srv::KeyVisual::Request>();
+            request->start = goals_.front().start;
+            auto future = table_client_->async_send_request(request,std::bind(&MissionTwo::table_response_callback, this, std::placeholders::_1));
+            waiting_for_response_ = true;
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Sent table goal: start=%s", request->start ? "true" : "false");
         }
     }
 
@@ -102,10 +137,11 @@ private:
         if (response->status) {
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal reached.");
             goals_.erase(goals_.begin());
-            waiting_for_response_ = false;
+            
         } else {
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal not reached yet.");
         }
+        waiting_for_response_ = false;
     }
 
     void menu_response_callback(rclcpp::Client<interfaces::srv::Menu>::SharedFuture future) {
@@ -119,16 +155,28 @@ private:
             if(color_id_!=-1 && num_!=-1) {
                 RCLCPP_INFO(this->get_logger(), "Color ID: %d, Number: %d", color_id_, num_);
                 goals_.erase(goals_.begin());
-                waiting_for_response_ = false;
+                
             } else {
                 RCLCPP_WARN(this->get_logger(), "Invalid color ID or number.");
             }
+            waiting_for_response_ = false;
         }
         
     }
 
+    void table_response_callback(rclcpp::Client<interfaces::srv::KeyVisual>::SharedFuture future) {
+        auto response = future.get();
+        if (response->ok) {
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Table detected at (%.1f, %.1f) with %d inliers.", response->cx, response->cy, response->inliers);
+            goals_.erase(goals_.begin());
+        } else {
+            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Table not detected.");
+        }
+        waiting_for_response_ = false;
+    }
+
     struct Goal {
-        int type;   //chassis = 0, camera =1
+        int type;   //chassis = 0, camera_menu =1, camera_table =2
         geometry_msgs::msg::PoseStamped pose;
         double max_linear_speed;
         double max_angular_speed;
@@ -138,6 +186,7 @@ private:
     // 成員變數
     rclcpp::Client<interfaces::srv::GoalPoint>::SharedPtr goal_client_;
     rclcpp::Client<interfaces::srv::Menu>::SharedPtr menu_client_;
+    rclcpp::Client<interfaces::srv::KeyVisual>::SharedPtr table_client_;
     rclcpp::TimerBase::SharedPtr timer_;
     std::vector<Goal> goals_;
     bool waiting_for_response_{false};

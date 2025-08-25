@@ -71,7 +71,8 @@ services:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - ROS_DOMAIN_ID=42
     volumes:
-        - $PWD/../src/opencv-pkg:/home/opencv/tdk_ros2_ws/src/opencv_ros
+        - $PWD/../src/opencv-pkg:/home/opencv/tdk_ros2_ws/src/opencv_pkg
+        - $PWD/../src/interfaces:/home/opencv/tdk_ros2_ws/src/interfaces
     command: bash
   
   task:
@@ -94,6 +95,9 @@ services:
       - DISPLAY=${DISPLAY}
       - XAUTHORITY=/home/abao/.Xauthority
       - ROS_WS=/home/abao/tdk_ros2_ws
+      - ROS_DOMAIN_ID=42                     
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - ROS_LOCALHOST_ONLY=0  
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro

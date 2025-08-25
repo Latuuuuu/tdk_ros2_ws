@@ -1,0 +1,6 @@
+bool start
+---
+bool ok
+float32 cx
+float32 cy
+int32 inliers
