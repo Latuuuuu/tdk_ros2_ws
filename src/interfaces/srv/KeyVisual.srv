@@ -4,3 +4,6 @@ bool ok
 float32 cx
 float32 cy
 int32 inliers
+float32 dx        
+float32 dy
+float32 z  

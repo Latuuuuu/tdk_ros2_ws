@@ -20,6 +20,11 @@ class Coffee(Node):
         self.last_log_time = 0
         self.cv_image = None
 
+    def _stop_sub(self):
+        if self.img_sub is not None:
+            self.destroy_subscription(self.img_sub)
+            self.img_sub = None
+
     def image_callback(self, msg):
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -57,6 +62,8 @@ class Coffee(Node):
                     result = self.color_idx * 10 + self.table_id
                     self.get_logger().info(f'Menu started, result={result}')
                     response.result = result
+                    self._stop_sub()
+                    self.start = False
                     return response
                 time.sleep(0.05)
             self.get_logger().warn('Detection not ready yet (timeout)')
