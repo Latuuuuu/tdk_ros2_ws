@@ -10,9 +10,10 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
 from ament_index_python.packages import get_package_share_directory
+from typing import Optional
 from interfaces.srv import KeyVisual   # srv 應含: ok,cx,cy,inliers,dx,dy,z
 
-SQUARE_SIZE_M = 0.07  # 主視覺邊長(公尺) 7cm
+SQUARE_SIZE_M = 0.075  # 主視覺邊長(公尺) 7.5cm
 
 class Table(Node):
     """
@@ -37,6 +38,7 @@ class Table(Node):
 
         # 內參 / 影像尺寸 / 深度
         self.fx = self.fy = self.cx = self.cy = None
+        self.dist = None
         self.color_shape = None   # (h,w)
         self.depth_img = None
         self.depth_shape = None
@@ -72,7 +74,8 @@ class Table(Node):
         # ---------- 訂閱/發佈 ----------
         self.info_sub  = self.create_subscription(CameraInfo, camera_info_topic, self.info_cb, 10)
         self.img_sub   = self.create_subscription(Image, color_image_topic, self.image_callback, qos)
-        self.depth_sub = self.create_subscription(Image, depth_topic, self.depth_cb, 10)
+        # self.depth_sub = self.create_subscription(Image, depth_topic, self.depth_cb, 10)
+        self.depth_sub = None
         self.img_publisher = self.create_publisher(Image, 'table_detection', 10)
 
         # ---------- Service ----------
@@ -116,6 +119,11 @@ class Table(Node):
     def info_cb(self, msg: CameraInfo):
         self.fx = msg.k[0]; self.fy = msg.k[4]
         self.cx = msg.k[2]; self.cy = msg.k[5]
+        self.dist = np.zeros((5,), dtype=np.float64)
+        # try:
+        #     self.dist = np.array(msg.d, dtype=np.float64).reshape(-1) if len(msg.d) > 0 else None
+        # except Exception:
+        #     self.dist = None
 
     def depth_cb(self, msg: Image):
         d = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
@@ -169,27 +177,30 @@ class Table(Node):
             if self.ok and self.location is not None and ready_intrinsics:
                 u, v = self.location
 
-                # ---- (1) 尺寸估距優先 ----
+                # 先嘗試：PnP（對傾斜最準）
                 Z = None
                 if self.last_corners is not None:
-                    w_px = self._square_edge_px(self.last_corners)
-                    if w_px > 5:
-                        Z_size = (self.fx * SQUARE_SIZE_M) / w_px
-                        # 在偏好的近距區間內，直接採用尺寸估距
-                        if self.prefer_min_z <= Z_size <= self.prefer_max_z:
-                            Z = Z_size
-                            # 訊息只偶爾打一次，避免洗版
-                            self.get_logger().info("Using size-based range as primary estimator.")
+                    Z_pose = self._estimate_z_from_pose(self.last_corners)
+                    if Z_pose is not None and self.min_valid_z <= Z_pose <= self.max_valid_z:
+                        Z = Z_pose
 
-                # ---- (2) 若尺寸估距不可用或超出偏好區間，嘗試深度備援 ----
+                # 若 PnP 無法提供，再用尺寸估距優先
+                if Z is None and self.last_corners is not None:
+                    w_px, h_px = self._square_edge_px_hw(self.last_corners)
+                    w_eff = max(1.0, 0.5 * (w_px + h_px))   # 像素邊長的平均，避免除以 0
+                    f_eff = float(np.sqrt(self.fx * self.fy))  # 等效焦距，降低 fx≠fy 的偏差
+                    Z_size = (f_eff * SQUARE_SIZE_M) / w_eff
+                    if self.min_valid_z <= Z_size <= self.max_valid_z:
+                        Z = Z_size
+
+                # 最後才用深度備援/或尺寸回退
                 if Z is None:
                     Z = self.depth_at(u, v)
                     if Z is None and self.last_corners is not None:
-                        # 再退回尺寸估距（即便超出偏好區間），至少給個值
                         w_px = self._square_edge_px(self.last_corners)
                         if w_px > 5:
                             Z = (self.fx * SQUARE_SIZE_M) / w_px
-                            self.get_logger().warn("Depth invalid → fallback to size-based Z outside prefer range.")
+                            self.get_logger().warn("Depth invalid → fallback to size-based Z.")
 
                 if Z is None or not (self.min_valid_z <= Z <= self.max_valid_z):
                     self.get_logger().warning(f'Z invalid: {Z}')
@@ -199,15 +210,12 @@ class Table(Node):
                 X = (u - self.cx) * Z / self.fx
                 Y = (v - self.cy) * Z / self.fy
 
-                dx_cam = -X
-                dy_cam = -Y
-
                 response.ok = True
                 response.z  = float(Z)
-                response.dx = float(dx_cam)
-                response.dy = float(dy_cam)
+                response.dx = float(-X)
+                response.dy = float(-Y)
 
-                self.get_logger().info(f"KV OK: (u,v)=({u:.1f},{v:.1f}), Z={Z:.3f} m, move (dx,dy)=({dx_cam:.3f},{dy_cam:.3f}) m")
+                self.get_logger().info(f"KV OK: (u,v)=({u:.1f},{v:.1f}), Z={Z:.3f} m, move (dx,dy)=({-X:.3f},{-Y:.3f}) m")
             else:
                 self.get_logger().warning('Table detection NOT ready (vision/intrinsics).')
             
@@ -225,8 +233,8 @@ class Table(Node):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # ORB 特徵
-        kps, desc = self._orb.detectAndCompute(gray, None)
-        if desc is None or len(kps) < 8 or self._tDesc is None:
+        kps, desc = self._orb.detectAndCompute(gray, None)  #kps:critical points , desc:descriptors
+        if desc is None or len(kps) < 8 or self._tDesc is None: #tDesc:template descriptors
             return vis, None, None, False
 
         # KNN + Lowe ratio
@@ -236,9 +244,9 @@ class Table(Node):
             return self._fallback_white_rect(frame)
 
         # 單應性
-        src = np.float32([self._tKp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-        dst = np.float32([kps[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-        H, inliers = cv2.findHomography(src, dst, cv2.RANSAC, 5.0)
+        src = np.float32([self._tKp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2) #src:template keypoints' coordinates
+        dst = np.float32([kps[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)  #dst:frame keypoints' coordinates
+        H, inliers = cv2.findHomography(src, dst, cv2.RANSAC, 5.0) #H:homography matrix, turning src to dst
         if H is None or inliers is None or inliers.sum() < 10:
             return self._fallback_white_rect(frame)
 
@@ -253,7 +261,6 @@ class Table(Node):
 
         self.inliers = int(inliers.sum())
         return vis, (float(cx), float(cy)), corners_i, True
-
     def _fallback_white_rect(self, frame):
         vis = frame.copy()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -292,11 +299,89 @@ class Table(Node):
         return vis, None, None, False
 
     # ---------- 工具 ----------
-    def _square_edge_px(self, corners: np.ndarray) -> float:
-        """回傳四邊形四條邊長的平均（像素）"""
+    def _order_corners(self, corners: np.ndarray) -> np.ndarray:
+        """將四角排序為 TL, TR, BR, BL(clockwise),輸入形狀 (4,2)"""
         c = corners.reshape(-1, 2).astype(np.float32)
-        d = lambda i, j: float(np.linalg.norm(c[i] - c[j]))
-        return 0.25 * (d(0, 1) + d(1, 2) + d(2, 3) + d(3, 0))
+        s = c.sum(axis=1)              # x+y
+        d = c[:, 0] - c[:, 1]          # x-y
+        tl = c[np.argmin(s)]
+        br = c[np.argmax(s)]
+        tr = c[np.argmin(d)]
+        bl = c[np.argmax(d)]
+        return np.array([tl, tr, br, bl], dtype=np.float32)
+    
+    def _square_edge_px_hw(self, corners: np.ndarray):
+        """回傳四邊形(水平寬)與(垂直高)的平均像素長度"""
+        c = corners.reshape(-1, 2).astype(np.float32)
+        # 對應四角: [0]=TL, [1]=TR, [2]=BR, [3]=BL（你的流程中順序可能不同，但成對相鄰即可）
+        w1 = float(np.linalg.norm(c[0] - c[1]))
+        w2 = float(np.linalg.norm(c[2] - c[3]))
+        h1 = float(np.linalg.norm(c[1] - c[2]))
+        h2 = float(np.linalg.norm(c[3] - c[0]))
+        w_px = 0.5 * (w1 + w2)
+        h_px = 0.5 * (h1 + h2)
+        return w_px, h_px
+    
+    def _estimate_z_from_pose(self, corners: np.ndarray) -> Optional[float]:
+        """用 PnP 在傾斜下估 Z，從多解中挑 Z>0 且重投影誤差最小者"""
+        if None in (self.fx, self.fy, self.cx, self.cy):
+            return None
+        cimg = self._order_corners(corners).astype(np.float32)  # TL,TR,BR,BL
+
+        half = SQUARE_SIZE_M / 2.0
+        obj = np.array([[-half, -half, 0.0],
+                        [ half, -half, 0.0],
+                        [ half,  half, 0.0],
+                        [-half,  half, 0.0]], dtype=np.float32)
+
+        K = np.array([[self.fx, 0, self.cx],
+                      [0, self.fy, self.cy],
+                      [0,      0,    1]], dtype=np.float64)
+        dist = self.dist if self.dist is not None else np.zeros((5,), dtype=np.float64)
+
+        try:
+            # 取多解
+            retval, rvecs, tvecs, _ = cv2.solvePnPGeneric(
+                obj, cimg, K, dist,
+                flags=cv2.SOLVEPNP_IPPE_SQUARE
+            )
+            if not retval or len(tvecs) == 0:
+                ok, rvec, tvec = cv2.solvePnP(obj, cimg, K, dist, flags=cv2.SOLVEPNP_ITERATIVE)
+                if not ok:
+                    return None
+                rvecs, tvecs = [rvec], [tvec]
+
+            best_Z, best_err = None, 1e9
+            for rvec, tvec in zip(rvecs, tvecs):
+                # 計算重投影誤差
+                proj, _ = cv2.projectPoints(obj, rvec, tvec, K, dist)
+                proj = proj.reshape(-1, 2)
+                err = float(np.sqrt(np.mean(np.sum((proj - cimg)**2, axis=1))))
+                z = float(tvec[2, 0]) if tvec.shape == (3, 1) else float(tvec[2])
+
+                # 優先選擇 Z>0 的解，並取最小誤差
+                if z > 0 and err < best_err:
+                    best_err, best_Z = err, z
+
+            # 若皆不是正 Z，則挑誤差最小（但標記警告）
+            if best_Z is None:
+                errs = []
+                for rvec, tvec in zip(rvecs, tvecs):
+                    proj, _ = cv2.projectPoints(obj, rvec, tvec, K, dist)
+                    proj = proj.reshape(-1, 2)
+                    errs.append(float(np.sqrt(np.mean(np.sum((proj - cimg)**2, axis=1)))))
+                idx = int(np.argmin(errs))
+                z = float(tvecs[idx][2, 0]) if tvecs[idx].shape == (3, 1) else float(tvecs[idx][2])
+                self.get_logger().warn(f'PnP only gave non-positive Z; picking smallest error. Z={z:.6f}, err={errs[idx]:.3f}')
+                best_Z = z
+
+            # Debug：若異常小或負，印出資訊幫助定位
+            if not np.isfinite(best_Z) or abs(best_Z) < 0.02:
+                self.get_logger().warn(f'PnP Z suspicious: Z={best_Z:.6f}, fx={self.fx:.1f}, fy={self.fy:.1f}')
+            return best_Z
+        except Exception as e:
+            self.get_logger().warn(f'PnP failed: {e}')
+            return None
 
     def depth_at(self, u_color, v_color, ksize_start=5):
         """深度備援：若深度/解析度不可用會回 None。單位輸出 m。"""

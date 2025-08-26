@@ -21,10 +21,6 @@ find_package(interfaces REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(SpeedPublisher src/speed_publisher.cpp)
-ament_target_dependencies(SpeedPublisher rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
-target_include_directories(SpeedPublisher PRIVATE include)
-
 add_executable(ChassisPilot src/chassis_pilot.cpp)
 ament_target_dependencies(ChassisPilot rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(ChassisPilot PRIVATE include)
@@ -40,7 +36,6 @@ ament_target_dependencies(SimLower rclcpp geometry_msgs nav_msgs)
 
 install(TARGETS
   SimLower
-  SpeedPublisher
   ChassisPilot
   MissionTwo
   DESTINATION lib/${PROJECT_NAME})

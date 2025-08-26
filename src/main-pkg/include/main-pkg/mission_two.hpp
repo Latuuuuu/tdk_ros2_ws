@@ -35,19 +35,19 @@ private:
         // 初始化目標點序列
         Goal goal1;
         goal1.type = 0;
-        goal1.pose.pose.position.x = 10.0;
-        goal1.pose.pose.position.y = 0.0;
+        goal1.pose.pose.position.x = -14.0;
+        goal1.pose.pose.position.y = 20.0;
         goal1.pose.pose.orientation.z = 0.0;
-        goal1.max_linear_speed = 1.0;
+        goal1.max_linear_speed = 1.25;
         goal1.max_angular_speed = 0.0;
         goals_.push_back(goal1);
 
         Goal goal2;
         goal2.type = 0;
-        goal2.pose.pose.position.x = -10.0;
-        goal2.pose.pose.position.y = -10.0;
+        goal2.pose.pose.position.x = -96.0;
+        goal2.pose.pose.position.y = 93.0;
         goal2.pose.pose.orientation.z = 0.0;
-        goal2.max_linear_speed = 1.0;
+        goal2.max_linear_speed = 1.25;
         goal2.max_angular_speed = 0.0;
         goals_.push_back(goal2);
 
@@ -61,8 +61,8 @@ private:
         goal4.pose.pose.position.x = 20.0;
         goal4.pose.pose.position.y = 10.0;
         goal4.pose.pose.orientation.z = 3.14;
-        goal4.max_linear_speed = 1.0; 
-        goal4.max_angular_speed = 0.5;
+        goal4.max_linear_speed = 1.25; 
+        goal4.max_angular_speed = 1.5;
         goals_.push_back(goal4);
 
         Goal goal5;
@@ -75,8 +75,8 @@ private:
         goal6.pose.pose.position.x = 0.0;
         goal6.pose.pose.position.y = 0.0;
         goal6.pose.pose.orientation.z = 0.0;
-        goal6.max_linear_speed = 2.0; 
-        goal6.max_angular_speed = 0.5;
+        goal6.max_linear_speed = 1.25; 
+        goal6.max_angular_speed = 1.5;
         goals_.push_back(goal6);
     }
 
@@ -167,7 +167,10 @@ private:
     void table_response_callback(rclcpp::Client<interfaces::srv::KeyVisual>::SharedFuture future) {
         auto response = future.get();
         if (response->ok) {
+            dx_ = response->dx;
+            dy_ = response->dy;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Table detected at (%.1f, %.1f) with %d inliers.", response->cx, response->cy, response->inliers);
+            RCLCPP_INFO(this->get_logger(), "Estimated offsets: dx=%.2f, dy=%.2f", dx_, dy_);
             goals_.erase(goals_.begin());
         } else {
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Table not detected.");
@@ -191,4 +194,5 @@ private:
     std::vector<Goal> goals_;
     bool waiting_for_response_{false};
     int color_id_{-1}, num_{-1};
+    float dx_{0.0}, dy_{0.0};
 };

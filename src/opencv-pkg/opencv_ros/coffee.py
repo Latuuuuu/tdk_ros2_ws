@@ -6,12 +6,18 @@ import cv2
 import time 
 import numpy as np
 from interfaces.srv import Menu
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+cv2.setNumThreads(1)
 
 class Coffee(Node):
     def __init__(self):
         super().__init__('coffee_node')
         self.bridge = CvBridge()
-        self.img_sub = self.create_subscription(Image,"/latuuu_camera/latuuu_camera/color/image_raw",self.image_callback,10)
+        sensor_qos = QoSProfile(depth=5)
+        sensor_qos.reliability = QoSReliabilityPolicy.BEST_EFFORT
+        sensor_qos.history = QoSHistoryPolicy.KEEP_LAST
+
+        self.img_sub = self.create_subscription(Image,"/latuuu_camera/latuuu_camera/color/image_raw",self.image_callback, sensor_qos)
         self.img_publisher = self.create_publisher(Image, 'coffee_detection', 10)
         self.server = self.create_service(Menu, 'menu', self.menu_callback)
         self.color_idx = -1
