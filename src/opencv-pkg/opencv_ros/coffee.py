@@ -62,7 +62,7 @@ class Coffee(Node):
     def menu_callback(self, request, response):
         if request.start:
             self.start = True 
-            deadline = time.time() + 10.0
+            deadline = time.time() + 15.0
             while time.time() < deadline:
                 if self.color_idx >= 0 and self.table_id >= 0:
                     result = self.color_idx * 10 + self.table_id
@@ -159,18 +159,37 @@ def analyze(frame):
         mean_val = cv2.mean(thresh, mask=mask)[0]   # 只用單通道
         if mean_val >= 200: color = (0, 255, 0)
         else:
+            M = cv2.moments(cnt)
+            if M["m00"] == 0:
+                continue
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+
+            # 越界保護
+            h, w = thresh.shape[:2]
+            cX = int(np.clip(cX, 0, w - 1))
+            cY = int(np.clip(cY, 0, h - 1))
+
+            # 用中心點像素判斷黑/白（來自二值圖 thresh）
+            center_val = int(thresh[cY, cX])  # 0 or 255
+            if center_val == 0:
+                color_idx = 0  # 黑
+                color = (255, 0, 0)
+            else:
+                color_idx = 1  # 白
+                color = (0, 0, 255)
             lac = relative_location(cnt, contours, resized)
             if lac == -1: continue
             elif lac[0] >= 0 and lac[1] >= 0: table_id = 2
             elif lac[0] >= 0 and lac[1] < 0: table_id = 3
             elif lac[0] < 0 and lac[1] >= 0: table_id = 1
             else: table_id = 4
-            if mean_val >= 100: 
-                color_idx = 0
-                color = (255, 0, 0)
-            else: 
-                color = (0, 0, 255)
-                color_idx = 1
+            # if mean_val >= 100: 
+            #     color_idx = 0
+            #     color = (255, 0, 0)
+            # else: 
+            #     color = (0, 0, 255)
+            #     color_idx = 1
             found = True
         M = cv2.moments(cnt)
         cX, cY = (0, 0) if M["m00"]==0 else (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"]))

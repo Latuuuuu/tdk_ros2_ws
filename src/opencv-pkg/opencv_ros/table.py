@@ -212,10 +212,10 @@ class Table(Node):
 
                 response.ok = True
                 response.z  = float(Z)
-                response.dx = float(-X)
-                response.dy = float(-Y)
+                response.dx = float(X*100.0)
+                response.dy = float(-Y*100.0)
 
-                self.get_logger().info(f"KV OK: (u,v)=({u:.1f},{v:.1f}), Z={Z:.3f} m, move (dx,dy)=({-X:.3f},{-Y:.3f}) m")
+                self.get_logger().info(f"KV OK: (u,v)=({u:.1f},{v:.1f}), Z={Z:.3f} m, move (dx,dy)=({X:.3f},{-Y:.3f}) m")
             else:
                 self.get_logger().warning('Table detection NOT ready (vision/intrinsics).')
             

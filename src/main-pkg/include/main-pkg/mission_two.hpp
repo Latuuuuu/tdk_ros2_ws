@@ -24,8 +24,7 @@ public:
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(100),std::bind(&MissionTwo::check_and_send_goal, this)
-        );
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(100),std::bind(&MissionTwo::check_and_send_goal, this));
 
         RCLCPP_INFO(this->get_logger(), "MissionTwo started.");
     }
@@ -33,51 +32,69 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        Goal goal1;
+        Goal goal1;// 第一關至第二關的銜接點
         goal1.type = 0;
-        goal1.pose.pose.position.x = -14.0;
-        goal1.pose.pose.position.y = 20.0;
+        goal1.pose.pose.position.x = 0.0;
+        goal1.pose.pose.position.y = 616.0;
         goal1.pose.pose.orientation.z = 0.0;
-        goal1.max_linear_speed = 1.25;
+        goal1.max_linear_speed = 5;
         goal1.max_angular_speed = 0.0;
         goals_.push_back(goal1);
 
-        Goal goal2;
+        Goal goal2;//第二關起點+轉向背對主桌
         goal2.type = 0;
-        goal2.pose.pose.position.x = -96.0;
-        goal2.pose.pose.position.y = 93.0;
-        goal2.pose.pose.orientation.z = 0.0;
-        goal2.max_linear_speed = 1.25;
-        goal2.max_angular_speed = 0.0;
+        goal2.pose.pose.position.x = 83.0;
+        goal2.pose.pose.position.y = 616.0;
+        goal2.pose.pose.orientation.z = 3.14;
+        goal2.max_linear_speed = 5;
+        goal2.max_angular_speed = 1.0;
         goals_.push_back(goal2);
 
-        Goal goal3;
-        goal3.type = 1;
-        goal3.start = 1;
-        goals_.push_back(goal3);
-
-        Goal goal4;
+        Goal goal4;//走到主桌前
         goal4.type = 0;
-        goal4.pose.pose.position.x = 20.0;
-        goal4.pose.pose.position.y = 10.0;
+        goal4.pose.pose.position.x = 85.0;
+        goal4.pose.pose.position.y = 666.0;
         goal4.pose.pose.orientation.z = 3.14;
-        goal4.max_linear_speed = 1.25; 
-        goal4.max_angular_speed = 1.5;
+        goal4.max_linear_speed = 5;
+        goal4.max_angular_speed = 1.0;
         goals_.push_back(goal4);
 
         Goal goal5;
-        goal5.type = 2;
+        goal5.type = 1;
         goal5.start = 1;
         goals_.push_back(goal5);
 
-        Goal goal6;
+        Goal goal6;//走到主桌前
         goal6.type = 0;
-        goal6.pose.pose.position.x = 0.0;
-        goal6.pose.pose.position.y = 0.0;
-        goal6.pose.pose.orientation.z = 0.0;
-        goal6.max_linear_speed = 1.25; 
-        goal6.max_angular_speed = 1.5;
+        goal6.pose.pose.position.x = 83.0;
+        goal6.pose.pose.position.y = 666.0;
+        goal6.pose.pose.orientation.z = 3.14;
+        goal6.max_linear_speed = 5;
+        goal6.max_angular_speed = 1.0;
         goals_.push_back(goal6);
+
+        Goal goal7;//回起點+轉向
+        goal7.type = 0;
+        goal7.pose.pose.position.x = 83.0;
+        goal7.pose.pose.position.y = 616.0;
+        goal7.pose.pose.orientation.z = 1.57;
+        goal7.max_linear_speed = 5;
+        goal7.max_angular_speed = 1.0;
+        goals_.push_back(goal7);
+
+        Goal goal8;
+        goal8.type = 2;
+        goal8.start = 1;
+        goals_.push_back(goal8);
+
+        Goal goal9;//第二關終點
+        goal9.type = 0;
+        goal9.pose.pose.position.x = -267;
+        goal9.pose.pose.position.y = 666.0;
+        goal9.pose.pose.orientation.z = 1.57;
+        goal9.max_linear_speed = 5;
+        goal9.max_angular_speed = 1.5;
+        goals_.push_back(goal9);
     }
 
     void check_and_send_goal() {
@@ -146,6 +163,8 @@ private:
 
     void menu_response_callback(rclcpp::Client<interfaces::srv::Menu>::SharedFuture future) {
         auto response = future.get();
+        color_id_ = 0;
+        num_ = 4;
         if (response->result == -1) {
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Camera not started.");
         } else {
@@ -153,29 +172,98 @@ private:
             color_id_ = response->result / 10;
             num_ = response->result % 10;
             if(color_id_!=-1 && num_!=-1) {
-                RCLCPP_INFO(this->get_logger(), "Color ID: %d, Number: %d", color_id_, num_);
-                goals_.erase(goals_.begin());
-                
+                RCLCPP_INFO(this->get_logger(), "Color ID: %d, Number: %d", color_id_, num_);//black0 white1  
             } else {
                 RCLCPP_WARN(this->get_logger(), "Invalid color ID or number.");
             }
             waiting_for_response_ = false;
         }
-        
+        goals_.erase(goals_.begin());
+        Goal goal2;//去正確的餐桌中點
+            Goal goal3;//去正確的餐桌前
+            goal2.type = 0;
+            goal3.type = 0;
+            if (num_ == 1) {
+                goal2.pose.pose.position.x = -151.0;
+                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.orientation.z = 3.14;
+                goal3.pose.pose.position.x = -148.0;
+                goal3.pose.pose.position.y = 641.0;
+                goal3.pose.pose.orientation.z = 3.14;
+                x_ = -148.0;
+                y_ = 641.0;
+                z_ = 3.14;
+            } else if (num_ == 2) {
+                goal2.pose.pose.position.x = -151.0;
+                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.orientation.z = 0.0;
+                goal3.pose.pose.position.x = -148.0;
+                goal3.pose.pose.position.y = 591.0;
+                goal3.pose.pose.orientation.z = 0.0;
+                x_ = -148.0;
+                y_ = 591.0;
+                z_ = 0.0;
+            } else if (num_ == 3) {
+                goal2.pose.pose.position.x = -81.0;
+                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.orientation.z = 0.0;
+                goal3.pose.pose.position.x = -78.0;
+                goal3.pose.pose.position.y = 591.0;
+                goal3.pose.pose.orientation.z = 0.0;
+                x_ = -78.0;
+                y_ = 591.0;
+                z_ = 0.0;
+            } else if (num_ == 4) {
+                goal2.pose.pose.position.x = -81.0;
+                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.orientation.z = 3.14;
+                goal3.pose.pose.position.x = -78.0;
+                goal3.pose.pose.position.y = 641.0;
+                goal3.pose.pose.orientation.z = 3.14;
+                x_ = -78.0;
+                y_ = 641.0;
+                z_ = 3.14;
+            }
+            goal2.max_linear_speed = 5;
+            goal2.max_angular_speed = 1.0;
+            goal3.max_linear_speed = 5;
+            goal3.max_angular_speed = 0.1;
+            goals_.insert(goals_.begin()+3, goal3);
+            goals_.insert(goals_.begin()+4, goal2);
+            goals_.insert(goals_.begin()+2, goal2);
+            goals_.insert(goals_.begin()+3, goal3);
+            
+            Goal goal;//夾杯子的位置
+            goal.type = 0;
+            if (color_id_) goal.pose.pose.position.x = 63.0; else goal.pose.pose.position.x = 103.0;
+            goal.pose.pose.position.y = 666.0;
+            goal.pose.pose.orientation.z = 3.14;
+            goal.max_linear_speed = 5;
+            goal.max_angular_speed = 0.1;
+            goals_.insert(goals_.begin(), goal);
     }
 
     void table_response_callback(rclcpp::Client<interfaces::srv::KeyVisual>::SharedFuture future) {
         auto response = future.get();
+        double dx=-3.0, dy=0.0;
         if (response->ok) {
-            dx_ = response->dx;
-            dy_ = response->dy;
+            dx = response->dx;
+            dy = response->dy;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Table detected at (%.1f, %.1f) with %d inliers.", response->cx, response->cy, response->inliers);
-            RCLCPP_INFO(this->get_logger(), "Estimated offsets: dx=%.2f, dy=%.2f", dx_, dy_);
-            goals_.erase(goals_.begin());
+            RCLCPP_INFO(this->get_logger(), "Estimated offsets: dx=%.2f, dy=%.2f", dx, dy);
         } else {
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Table not detected.");
         }
         waiting_for_response_ = false;
+        goals_.erase(goals_.begin());
+        Goal goal;//夾取點
+        goal.type = 0;
+        goal.pose.pose.position.x = x_ + dx - 3.0;//要調整鏡頭中心至夾取點的偏移
+        goal.pose.pose.position.y = y_ + dy;
+        goal.pose.pose.orientation.z = z_;
+        goal.max_linear_speed = 5;
+        goal.max_angular_speed = 0.1;
+        goals_.insert(goals_.begin(), goal);
     }
 
     struct Goal {
@@ -194,5 +282,5 @@ private:
     std::vector<Goal> goals_;
     bool waiting_for_response_{false};
     int color_id_{-1}, num_{-1};
-    float dx_{0.0}, dy_{0.0};
+    double x_{-81.0}, y_{641.0},z_{3.14}; 
 };

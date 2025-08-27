@@ -62,14 +62,14 @@ private:
         return a;
     }
 
-  static geometry_msgs::msg::Quaternion yaw_to_quaternion(double yaw) {
-    geometry_msgs::msg::Quaternion q;
-    q.x = 0.0;
-    q.y = 0.0;
-    q.z = std::sin(yaw * 0.5);
-    q.w = std::cos(yaw * 0.5);
-    return q;
-  }
+  // static geometry_msgs::msg::Quaternion yaw_to_quaternion(double yaw) {
+  //   geometry_msgs::msg::Quaternion q;
+  //   q.x = 0.0;
+  //   q.y = 0.0;
+  //   q.z = std::sin(yaw * 0.5);
+  //   q.w = std::cos(yaw * 0.5);
+  //   return q;
+  // }
 
   // 參數
   const int period_ms_{50};
@@ -79,7 +79,7 @@ private:
   const std::string child_frame_id_{"base_link"};
 
   // 狀態
-  double x_{0.0}, y_{0.0}, yaw_{0.0};
+  double x_{0.0}, y_{616.0}, yaw_{0.0};
   double vx_{0.0}, vy_{0.0}, wz_{0.0};
   rclcpp::Time last_step_time_;
 

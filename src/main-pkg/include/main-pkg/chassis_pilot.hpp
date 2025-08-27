@@ -60,6 +60,7 @@ private:
 
         RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(),static_cast<uint64_t>(std::max(2000, log_throttle_ms_)),"State x=%.3f y=%.3f yaw=%.3f | v=%.2f w=%.2f",x_, y_, yaw_, linear_velocity_now_, angular_velocity_now_);
     }
+    
     void set_goal(const std::shared_ptr<interfaces::srv::GoalPoint::Request> request,const std::shared_ptr<interfaces::srv::GoalPoint::Response> response){
         goal_x_ = request->goal.pose.position.x;
         goal_y_ = request->goal.pose.position.y;

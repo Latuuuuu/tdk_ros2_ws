@@ -27,7 +27,7 @@ configurable_parameters = [{'name': 'camera_name',                  'default': '
                            {'name': 'usb_port_id',                  'default': "''", 'description': 'choose device by usb port id'},
                            {'name': 'device_type',                  'default': "''", 'description': 'choose device by type'},
                            {'name': 'config_file',                  'default': "''", 'description': 'yaml config file'},
-                           {'name': 'json_file_path',               'default': "visual_presets/HighAccuracyPreset.json", 'description': 'allows advanced configuration'},
+                           {'name': 'json_file_path',               'default': "", 'description': 'allows advanced configuration'}, #"visual_presets/HighAccuracyPreset.json"
                            {'name': 'initial_reset',                'default': 'false', 'description': "''"},
                            {'name': 'accelerate_gpu_with_glsl',     'default': "false", 'description': 'enable GPU acceleration with GLSL'},
                            {'name': 'rosbag_filename',              'default': "''", 'description': 'A realsense bagfile to run from as a device'},
@@ -37,7 +37,7 @@ configurable_parameters = [{'name': 'camera_name',                  'default': '
                            {'name': 'rgb_camera.color_profile',     'default': '848,480,60', 'description': 'color stream profile'},
                            {'name': 'rgb_camera.color_format',      'default': 'RGB8', 'description': 'color stream format'},
                            {'name': 'rgb_camera.enable_auto_exposure', 'default': 'true', 'description': 'enable/disable auto exposure for color image'},
-                           {'name': 'enable_depth',                 'default': 'true', 'description': 'enable depth stream'},
+                           {'name': 'enable_depth',                 'default': 'false', 'description': 'enable depth stream'},#技術性關深度
                            {'name': 'enable_infra',                 'default': 'false', 'description': 'enable infra0 stream'},
                            {'name': 'enable_infra1',                'default': 'false', 'description': 'enable infra1 stream'},
                            {'name': 'enable_infra2',                'default': 'false', 'description': 'enable infra2 stream'},
