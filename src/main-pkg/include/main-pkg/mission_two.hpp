@@ -11,6 +11,7 @@
 #include "interfaces/srv/menu.hpp"
 #include "interfaces/srv/key_visual.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/int32.hpp"
 
 class MissionTwo : public rclcpp::Node {
 public:
@@ -19,6 +20,8 @@ public:
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
         menu_client_ = this->create_client<interfaces::srv::Menu>("/menu");
         table_client_ = this->create_client<interfaces::srv::KeyVisual>("/table");
+        arm_cmd_pub_ = this->create_publisher<std_msgs::msg::Int32>("/arm_cmd", 10);
+        arm_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/arm_status", 10,std::bind(&MissionTwo::arm_status_callback, this, std::placeholders::_1));
 
         // 初始化目標點序列
         initialize_goals();
@@ -60,41 +63,61 @@ private:
         goals_.push_back(goal4);
 
         Goal goal5;
-        goal5.type = 1;
-        goal5.start = 1;
+        goal5.type = 3;
+        goal5.arm_cmd = 1;
         goals_.push_back(goal5);
 
-        Goal goal6;//走到主桌前
-        goal6.type = 0;
-        goal6.pose.pose.position.x = 83.0;
-        goal6.pose.pose.position.y = 666.0;
-        goal6.pose.pose.orientation.z = 3.14;
-        goal6.max_linear_speed = 5;
-        goal6.max_angular_speed = 1.0;
+        Goal goal6;
+        goal6.type = 1;
+        goal6.start = 1;
         goals_.push_back(goal6);
 
-        Goal goal7;//回起點+轉向
-        goal7.type = 0;
-        goal7.pose.pose.position.x = 83.0;
-        goal7.pose.pose.position.y = 616.0;
-        goal7.pose.pose.orientation.z = 1.57;
-        goal7.max_linear_speed = 5;
-        goal7.max_angular_speed = 1.0;
+        Goal goal7;
+        goal7.type = 3;
+        goal7.arm_cmd = 2;
         goals_.push_back(goal7);
 
-        Goal goal8;
-        goal8.type = 2;
-        goal8.start = 1;
+        Goal goal8;//走到主桌前
+        goal8.type = 0;
+        goal8.pose.pose.position.x = 83.0;
+        goal8.pose.pose.position.y = 666.0;
+        goal8.pose.pose.orientation.z = 3.14;
+        goal8.max_linear_speed = 5;
+        goal8.max_angular_speed = 1.0;
         goals_.push_back(goal8);
 
-        Goal goal9;//第二關終點
+        Goal goal9;//回起點+轉向
         goal9.type = 0;
-        goal9.pose.pose.position.x = -267;
-        goal9.pose.pose.position.y = 666.0;
+        goal9.pose.pose.position.x = 83.0;
+        goal9.pose.pose.position.y = 616.0;
         goal9.pose.pose.orientation.z = 1.57;
         goal9.max_linear_speed = 5;
-        goal9.max_angular_speed = 1.5;
+        goal9.max_angular_speed = 1.0;
         goals_.push_back(goal9);
+
+        Goal goal10;
+        goal10.type = 3;
+        goal10.arm_cmd = 3;
+        goals_.push_back(goal10);
+
+        Goal goal11;
+        goal11.type = 2;
+        goal11.start = 1;
+        goals_.push_back(goal11);
+
+        Goal goal12;
+        goal12.type = 3;
+        goal12.arm_cmd = 4;
+        goals_.push_back(goal12);
+
+        Goal goal13;//第二關終點
+        goal13.type = 0;
+        goal13.pose.pose.position.x = -267;
+        goal13.pose.pose.position.y = 666.0;
+        goal13.pose.pose.orientation.z = 1.57;
+        goal13.max_linear_speed = 5;
+        goal13.max_angular_speed = 1.5;
+        goals_.push_back(goal13);
     }
 
     void check_and_send_goal() {
@@ -135,6 +158,15 @@ private:
             auto future = goal_client_->async_send_request(request,std::bind(&MissionTwo::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
+        }else if (goals_.front().type == 3) {
+            // 手臂任務：發布行動代號並等待回覆等於同代號
+            pending_arm_cmd_ = goals_.front().arm_cmd;
+            std_msgs::msg::Int32 cmd;
+            cmd.data = pending_arm_cmd_;
+            arm_cmd_pub_->publish(cmd);
+            waiting_for_response_ = true;
+            waiting_for_arm_ = true;
+            RCLCPP_INFO(this->get_logger(), "Sent arm cmd: %d", pending_arm_cmd_);
         }else{
             // 如果是桌子目標，則呼叫桌子服務
             if (!table_client_->wait_for_service(std::chrono::seconds(1))) {
@@ -176,8 +208,8 @@ private:
             } else {
                 RCLCPP_WARN(this->get_logger(), "Invalid color ID or number.");
             }
-            waiting_for_response_ = false;
         }
+        waiting_for_response_ = false;
         goals_.erase(goals_.begin());
         Goal goal2;//去正確的餐桌中點
             Goal goal3;//去正確的餐桌前
@@ -228,10 +260,10 @@ private:
             goal2.max_angular_speed = 1.0;
             goal3.max_linear_speed = 5;
             goal3.max_angular_speed = 0.1;
-            goals_.insert(goals_.begin()+3, goal3);
-            goals_.insert(goals_.begin()+4, goal2);
-            goals_.insert(goals_.begin()+2, goal2);
-            goals_.insert(goals_.begin()+3, goal3);
+            goals_.insert(goals_.begin()+6, goal3);
+            goals_.insert(goals_.begin()+7, goal2);
+            goals_.insert(goals_.begin()+3, goal2);
+            goals_.insert(goals_.begin()+4, goal3);
             
             Goal goal;//夾杯子的位置
             goal.type = 0;
@@ -265,13 +297,30 @@ private:
         goal.max_angular_speed = 0.1;
         goals_.insert(goals_.begin(), goal);
     }
+    void arm_status_callback(const std_msgs::msg::Int32::SharedPtr msg) {
+        if (!waiting_for_arm_) return;
+        if (msg->data == pending_arm_cmd_) {
+            RCLCPP_INFO(this->get_logger(), "Arm done for cmd=%d", pending_arm_cmd_);
+            waiting_for_response_ = false;
+            waiting_for_arm_ = false;
+            pending_arm_cmd_ = -1;
+            // 完成後彈出此手臂目標，進下一個
+            if (!goals_.empty() && goals_.front().type == 3) {
+                goals_.erase(goals_.begin());
+            }
+        } else {
+            // 其他代碼：忽略或打印
+            RCLCPP_DEBUG(this->get_logger(), "Arm status=%d (waiting %d)", msg->data, pending_arm_cmd_);
+        }
+    }
 
     struct Goal {
-        int type;   //chassis = 0, camera_menu =1, camera_table =2
+        int type;   //chassis = 0, camera_menu =1, camera_table =2, arm =3
         geometry_msgs::msg::PoseStamped pose;
         double max_linear_speed;
         double max_angular_speed;
         bool start;
+        int arm_cmd ;
     };
 
     // 成員變數
@@ -283,4 +332,8 @@ private:
     bool waiting_for_response_{false};
     int color_id_{-1}, num_{-1};
     double x_{-81.0}, y_{641.0},z_{3.14}; 
+    int pending_arm_cmd_{0};
+    bool waiting_for_arm_{false};
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr arm_cmd_pub_;
+    rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr arm_status_sub_;
 };
