@@ -20,8 +20,8 @@ public:
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
         menu_client_ = this->create_client<interfaces::srv::Menu>("/menu");
         table_client_ = this->create_client<interfaces::srv::KeyVisual>("/table");
-        arm_cmd_pub_ = this->create_publisher<std_msgs::msg::Int32>("/arm_cmd", 10);
-        arm_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/arm_status", 10,std::bind(&MissionTwo::arm_status_callback, this, std::placeholders::_1));
+        arm_cmd_pub_ = this->create_publisher<std_msgs::msg::Int32>("/robot/cmd_arm", 10);
+        arm_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/robot/arm_status", 10,std::bind(&MissionTwo::arm_status_callback, this, std::placeholders::_1));
 
         // 初始化目標點序列
         initialize_goals();
@@ -35,63 +35,63 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        Goal goal1;// 第一關至第二關的銜接點
-        goal1.type = 0;
-        goal1.pose.pose.position.x = 0.0;
-        goal1.pose.pose.position.y = 616.0;
-        goal1.pose.pose.orientation.z = 0.0;
-        goal1.max_linear_speed = 5;
-        goal1.max_angular_speed = 0.0;
-        goals_.push_back(goal1);
+        // Goal goal1;// 第一關至第二關的銜接點
+        // goal1.type = 0;
+        // goal1.pose.pose.position.x = 0.0;
+        // goal1.pose.pose.position.y = 616.0;
+        // goal1.pose.pose.orientation.z = 0.0;
+        // goal1.max_linear_speed = 50.0;
+        // goal1.max_angular_speed = 0.0;
+        // goals_.push_back(goal1);
 
-        Goal goal2;//第二關起點+轉向背對主桌
-        goal2.type = 0;
-        goal2.pose.pose.position.x = 83.0;
-        goal2.pose.pose.position.y = 616.0;
-        goal2.pose.pose.orientation.z = 3.14;
-        goal2.max_linear_speed = 5;
-        goal2.max_angular_speed = 1.0;
-        goals_.push_back(goal2);
+        // Goal goal2;//第二關起點+轉向背對主桌
+        // goal2.type = 0;
+        // goal2.pose.pose.position.x = 83.0;
+        // goal2.pose.pose.position.y = 616.0;
+        // goal2.pose.pose.orientation.z = 3.14;
+        // goal2.max_linear_speed = 50.0;
+        // goal2.max_angular_speed = 1.0;
+        // goals_.push_back(goal2);
 
-        Goal goal4;//走到主桌前
-        goal4.type = 0;
-        goal4.pose.pose.position.x = 85.0;
-        goal4.pose.pose.position.y = 666.0;
-        goal4.pose.pose.orientation.z = 3.14;
-        goal4.max_linear_speed = 5;
-        goal4.max_angular_speed = 1.0;
-        goals_.push_back(goal4);
+        // Goal goal4;//走到主桌前
+        // goal4.type = 0;
+        // goal4.pose.pose.position.x = 85.0;
+        // goal4.pose.pose.position.y = 666.0;
+        // goal4.pose.pose.orientation.z = 3.14;
+        // goal4.max_linear_speed = 50.0;
+        // goal4.max_angular_speed = 1.0;
+        // goals_.push_back(goal4);
 
-        Goal goal5;
-        goal5.type = 3;
-        goal5.arm_cmd = 1;
-        goals_.push_back(goal5);
+        // Goal goal5;
+        // goal5.type = 3;
+        // goal5.arm_cmd = 1;
+        // goals_.push_back(goal5);
 
-        Goal goal6;
-        goal6.type = 1;
-        goal6.start = 1;
-        goals_.push_back(goal6);
+        // Goal goal6;
+        // goal6.type = 1;
+        // goal6.start = 1;
+        // goals_.push_back(goal6);
 
-        Goal goal7;
-        goal7.type = 3;
-        goal7.arm_cmd = 2;
-        goals_.push_back(goal7);
+        // Goal goal7;
+        // goal7.type = 3;
+        // goal7.arm_cmd = 2;
+        // goals_.push_back(goal7);
 
-        Goal goal8;//走到主桌前
-        goal8.type = 0;
-        goal8.pose.pose.position.x = 83.0;
-        goal8.pose.pose.position.y = 666.0;
-        goal8.pose.pose.orientation.z = 3.14;
-        goal8.max_linear_speed = 5;
-        goal8.max_angular_speed = 1.0;
-        goals_.push_back(goal8);
+        // Goal goal8;//走到主桌前
+        // goal8.type = 0;
+        // goal8.pose.pose.position.x = 83.0;
+        // goal8.pose.pose.position.y = 666.0;
+        // goal8.pose.pose.orientation.z = 3.14;
+        // goal8.max_linear_speed = 50.0;
+        // goal8.max_angular_speed = 1.0;
+        // goals_.push_back(goal8);
 
         Goal goal9;//回起點+轉向
         goal9.type = 0;
         goal9.pose.pose.position.x = 83.0;
         goal9.pose.pose.position.y = 616.0;
         goal9.pose.pose.orientation.z = 1.57;
-        goal9.max_linear_speed = 5;
+        goal9.max_linear_speed = 50.0;
         goal9.max_angular_speed = 1.0;
         goals_.push_back(goal9);
 
@@ -115,7 +115,7 @@ private:
         goal13.pose.pose.position.x = -267;
         goal13.pose.pose.position.y = 666.0;
         goal13.pose.pose.orientation.z = 1.57;
-        goal13.max_linear_speed = 5;
+        goal13.max_linear_speed = 50.0;
         goal13.max_angular_speed = 1.5;
         goals_.push_back(goal13);
     }
@@ -157,7 +157,7 @@ private:
             request->max_angular_speed = goals_.front().max_angular_speed;
             auto future = goal_client_->async_send_request(request,std::bind(&MissionTwo::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
         }else if (goals_.front().type == 3) {
             // 手臂任務：發布行動代號並等待回覆等於同代號
             pending_arm_cmd_ = goals_.front().arm_cmd;
@@ -188,7 +188,7 @@ private:
             goals_.erase(goals_.begin());
             
         } else {
-            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal not reached yet.");
+            // RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal not reached yet.");
         }
         waiting_for_response_ = false;
     }
@@ -256,9 +256,9 @@ private:
                 y_ = 641.0;
                 z_ = 3.14;
             }
-            goal2.max_linear_speed = 5;
+            goal2.max_linear_speed = 50.0;
             goal2.max_angular_speed = 1.0;
-            goal3.max_linear_speed = 5;
+            goal3.max_linear_speed = 50.0;
             goal3.max_angular_speed = 0.1;
             goals_.insert(goals_.begin()+6, goal3);
             goals_.insert(goals_.begin()+7, goal2);
@@ -270,7 +270,7 @@ private:
             if (color_id_) goal.pose.pose.position.x = 63.0; else goal.pose.pose.position.x = 103.0;
             goal.pose.pose.position.y = 666.0;
             goal.pose.pose.orientation.z = 3.14;
-            goal.max_linear_speed = 5;
+            goal.max_linear_speed = 50.0;
             goal.max_angular_speed = 0.1;
             goals_.insert(goals_.begin(), goal);
     }
@@ -290,10 +290,10 @@ private:
         goals_.erase(goals_.begin());
         Goal goal;//夾取點
         goal.type = 0;
-        goal.pose.pose.position.x = x_ + dx - 3.0;//要調整鏡頭中心至夾取點的偏移
+        goal.pose.pose.position.x = x_ + dx ;//要調整鏡頭中心至夾取點的偏移
         goal.pose.pose.position.y = y_ + dy;
         goal.pose.pose.orientation.z = z_;
-        goal.max_linear_speed = 5;
+        goal.max_linear_speed = 50.0;
         goal.max_angular_speed = 0.1;
         goals_.insert(goals_.begin(), goal);
     }

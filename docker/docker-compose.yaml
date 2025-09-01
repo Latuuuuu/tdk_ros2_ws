@@ -32,8 +32,7 @@ services:
     device_cgroup_rules:
       - "c 81:* rmw"
       - "c 189:* rmw"
-    command: bash
-    #bash -ic "colcon build && ros2 launch realsense2_camera rs_launch.py"
+    command: ["/ros_entrypoint.sh", "ros2", "launch", "realsense2_camera", "rs_launch.py"]
 
   gui:
     build:
@@ -107,17 +106,19 @@ services:
       - ${HOME}/.Xauthority:/home/abao/.Xauthority:ro
     command: /bin/bash
 
-  # micro-ros-agent:
-  #   image: microros/micro-ros-agent:humble
-  #   container_name: micro-ros-agent
-  #   network_mode: host
-  #   devices:
-  #     - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF3833554B3043185746-if02:/dev/ttyAgent
-  #   command: >
-  #     serial --dev /dev/ttyAgent --baudrate 115200 -v6
-  #   group_add:
-  #     - dialout
-  #   restart: unless-stopped
+  micro-ros-agent:
+    image: microros/micro-ros-agent:humble
+    container_name: micro-ros-agent
+    network_mode: host
+    devices:
+      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF525370874967014655-if02:/dev/ttyACM0
+    volumes:
+      - /dev:/dev
+    command: >
+      serial --dev /dev/ttyACM0 --baudrate 115200 -v6
+    group_add:
+      - dialout
+    restart: unless-stopped
     
 
 

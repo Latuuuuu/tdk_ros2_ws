@@ -58,7 +58,7 @@ private:
 
         have_state_ = true;
 
-        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(),static_cast<uint64_t>(std::max(2000, log_throttle_ms_)),"State x=%.3f y=%.3f yaw=%.3f | v=%.2f w=%.2f",x_, y_, yaw_, linear_velocity_now_, angular_velocity_now_);
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(),static_cast<uint64_t>(log_throttle_ms_),"State x=%.3f y=%.3f yaw=%.3f | v=%.2f w=%.2f",x_, y_, yaw_, linear_velocity_now_, angular_velocity_now_);
     }
     
     void set_goal(const std::shared_ptr<interfaces::srv::GoalPoint::Request> request,const std::shared_ptr<interfaces::srv::GoalPoint::Response> response){
@@ -76,7 +76,7 @@ private:
         response->status = done;        
         have_goal_ = !done;
 
-        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal Set: x=%.2f, y=%.2f, yaw=%.2f", goal_x_, goal_y_, goal_yaw_);   
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), static_cast<uint64_t>(log_throttle_ms_), "Goal Set: x=%.2f, y=%.2f, yaw=%.2f", goal_x_, goal_y_, goal_yaw_);   
     }
 
     void publish_velocity() {
@@ -190,7 +190,7 @@ private:
     bool have_goal_ {false};
     //parameter
     double pos_tol_ {0.004}, yaw_tol_ {0.001};
-    int log_throttle_ms_ {2000};
+    int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
     double max_linear_speed_ {1.25}, max_angular_speed_ {1.5}, linear_acceleration_ {0.3}, angular_acceleration_ {0.05};

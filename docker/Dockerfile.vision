@@ -72,6 +72,8 @@ RUN mkdir -p $ROS_WS_PATH/src && \
         https://github.com/IntelRealSense/realsense-ros.git \
         $ROS_WS_PATH/src/realsense-ros
 RUN sh /tmp/rosdep_init.sh $USER
+COPY ../scripts/temp/ $ROS_WS_PATH/src/realsense-ros/realsense2_camera/launch/
+RUN sh /tmp/rosdep_init.sh $USER
 WORKDIR $ROS_WS_PATH
 
 FROM base AS gui

@@ -5,6 +5,8 @@ from cv_bridge import CvBridge
 import cv2
 import time 
 import numpy as np
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from interfaces.srv import Menu
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 cv2.setNumThreads(1)
@@ -17,9 +19,12 @@ class Coffee(Node):
         sensor_qos.reliability = QoSReliabilityPolicy.BEST_EFFORT
         sensor_qos.history = QoSHistoryPolicy.KEEP_LAST
 
-        self.img_sub = self.create_subscription(Image,"/latuuu_camera/latuuu_camera/color/image_raw",self.image_callback, sensor_qos)
+        cb_group1 = MutuallyExclusiveCallbackGroup()
+        cb_group2 = MutuallyExclusiveCallbackGroup()
+
+        self.img_sub = self.create_subscription(Image,"/latuuu_camera/latuuu_camera/color/image_raw",self.image_callback, sensor_qos,callback_group=cb_group1)
         self.img_publisher = self.create_publisher(Image, 'coffee_detection', 10)
-        self.server = self.create_service(Menu, 'menu', self.menu_callback)
+        self.server = self.create_service(Menu, 'menu', self.menu_callback,callback_group=cb_group2)
         self.color_idx = -1
         self.table_id = -1
         self.start = False
@@ -32,18 +37,18 @@ class Coffee(Node):
             self.img_sub = None
 
     def image_callback(self, msg):
-        try:
-            self.cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            self.cv_image,self.color_idx,self.table_id=analyze(self.cv_image)
-            if self.start:
+        if self.start:
+            try:
+                self.cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+                self.cv_image,self.color_idx,self.table_id=analyze(self.cv_image)
                 self.publish_processed_image()
-            else:
-                current_time = time.time()
-                if current_time - self.last_log_time > 2.0:
-                    self.get_logger().info('Waiting for camera to start...')
-                    self.last_log_time = current_time
-        except Exception as e:
-            self.get_logger().error(f'Error converting image: {e}')
+            except Exception as e:
+                self.get_logger().error(f'Error converting image: {e}')
+        else:
+            current_time = time.time()
+            if current_time - self.last_log_time > 30.0:
+                self.get_logger().info('Waiting for camera to start...')
+                self.last_log_time = current_time
 
     def publish_processed_image(self):
         try:
@@ -62,7 +67,7 @@ class Coffee(Node):
     def menu_callback(self, request, response):
         if request.start:
             self.start = True 
-            deadline = time.time() + 15.0
+            deadline = time.time() + 30.0
             while time.time() < deadline:
                 if self.color_idx >= 0 and self.table_id >= 0:
                     result = self.color_idx * 10 + self.table_id
@@ -80,18 +85,6 @@ class Coffee(Node):
             response.result = -1
             self.start = False
             return response
-    
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = Coffee()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-if __name__ == '__main__':
-    main()
 
 def is_square(cnt):
     peri = cv2.arcLength(cnt, True)
@@ -198,3 +191,16 @@ def analyze(frame):
         if found:
             break
     return resized,color_idx,table_id
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = Coffee()
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+    executor.spin()
+    executor.shutdown()
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()

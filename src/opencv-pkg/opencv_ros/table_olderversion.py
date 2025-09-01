@@ -4,8 +4,6 @@ from pathlib import Path
 import time
 import cv2
 import numpy as np
-from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
@@ -15,7 +13,7 @@ from ament_index_python.packages import get_package_share_directory
 from typing import Optional
 from interfaces.srv import KeyVisual   # srv 應含: ok,cx,cy,inliers,dx,dy,z
 
-SQUARE_SIZE_M = 0.08  # 主視覺邊長(公尺) 8cm
+SQUARE_SIZE_M = 0.075  # 主視覺邊長(公尺) 7.5cm
 
 class Table(Node):
     """
@@ -73,19 +71,15 @@ class Table(Node):
         qos.reliability = QoSReliabilityPolicy.BEST_EFFORT
         qos.history = QoSHistoryPolicy.KEEP_LAST
 
-        # ---------- Callback Groups ----------
-        cb_group1 = MutuallyExclusiveCallbackGroup()
-        cb_group2 = MutuallyExclusiveCallbackGroup()
-
         # ---------- 訂閱/發佈 ----------
         self.info_sub  = self.create_subscription(CameraInfo, camera_info_topic, self.info_cb, 10)
-        self.img_sub   = self.create_subscription(Image, color_image_topic, self.image_callback, qos, callback_group=cb_group1)
+        self.img_sub   = self.create_subscription(Image, color_image_topic, self.image_callback, qos)
         # self.depth_sub = self.create_subscription(Image, depth_topic, self.depth_cb, 10)
         self.depth_sub = None
         self.img_publisher = self.create_publisher(Image, 'table_detection', 10)
 
         # ---------- Service ----------
-        self.server = self.create_service(KeyVisual, 'table', self.table_callback, callback_group=cb_group2)
+        self.server = self.create_service(KeyVisual, 'table', self.table_callback)
 
         # ---------- 模板/特徵 ----------
         template_path = self._resolve_template_path()
@@ -163,89 +157,74 @@ class Table(Node):
     # ---------- Service ----------
     def table_callback(self, request, response):
         try:
-            # 預設填入基本欄位
+            self.start = bool(request.start)
+
+            # 預設填入基本欄位（即使 not ready 也回，方便上游 debug）
             response.ok = False
             response.cx = float(self.location[0]) if self.location is not None else -1.0
             response.cy = float(self.location[1]) if self.location is not None else -1.0
             response.inliers = int(self.inliers) if self.inliers is not None else 0
             response.dx = 0.0
             response.dy = 0.0
-            response.z = -1.0
+            response.z  = -1.0
 
-            if request.start:
-                self.start = True
-                # 重置狀態，確保分析最新影像
-                self.ok = False
-                self.location = None
-                self.last_corners = None
-                
-                deadline = time.time() + 30.0
-                while time.time() < deadline:
-                    ready_intrinsics = all(v is not None for v in [self.fx, self.fy, self.cx, self.cy])
-                    
-                    # 更新回應中的即時狀態
-                    if self.location is not None:
-                        response.cx = float(self.location[0])
-                        response.cy = float(self.location[1])
-                    response.inliers = int(self.inliers) if self.inliers is not None else 0
-
-                    if self.ok and self.location is not None and ready_intrinsics:
-                        u, v = self.location
-
-                        # 先嘗試：PnP（對傾斜最準）
-                        Z = None
-                        if self.last_corners is not None:
-                            Z_pose = self._estimate_z_from_pose(self.last_corners)
-                            if Z_pose is not None and self.min_valid_z <= Z_pose <= self.max_valid_z:
-                                Z = Z_pose
-
-                        # 若 PnP 無法提供，再用尺寸估距優先
-                        if Z is None and self.last_corners is not None:
-                            w_px, h_px = self._square_edge_px_hw(self.last_corners)
-                            w_eff = max(1.0, 0.5 * (w_px + h_px))
-                            f_eff = float(np.sqrt(self.fx * self.fy))
-                            Z_size = (f_eff * SQUARE_SIZE_M) / w_eff
-                            if self.min_valid_z <= Z_size <= self.max_valid_z:
-                                Z = Z_size
-
-                        # 最後才用深度備援
-                        if Z is None:
-                            Z = self.depth_at(u, v)
-                            if Z is None and self.last_corners is not None:
-                                w_px, _ = self._square_edge_px_hw(self.last_corners)
-                                if w_px > 5:
-                                    Z = (self.fx * SQUARE_SIZE_M) / w_px
-
-                        if Z is not None and (self.min_valid_z <= Z <= self.max_valid_z):
-                            # 像素→相機座標
-                            X = (u - self.cx) * Z / self.fx
-                            Y = (v - self.cy) * Z / self.fy
-
-                            response.ok = True
-                            response.z = float(Z)
-                            response.dx = float(X * 100.0)
-                            response.dy = float(-Y * 100.0)
-
-                            self.get_logger().info(f"Table detected: Z={Z:.3f}m, move (dx,dy)=({X:.3f},{-Y:.3f})m")
-                            self.start = False
-                            return response
-                    
-                    time.sleep(0.05)  # 讓出執行時間給其他 callback
-                
-                self.get_logger().warn('Table detection timeout')
-                response.ok = False
-                self.start = False
+            if not self.start:
+                self.get_logger().info('Table detection stopped.')
                 return response
+
+            ready_intrinsics = all(v is not None for v in [self.fx, self.fy, self.cx, self.cy])
+
+            if self.ok and self.location is not None and ready_intrinsics:
+                u, v = self.location
+
+                # 先嘗試：PnP（對傾斜最準）
+                Z = None
+                if self.last_corners is not None:
+                    Z_pose = self._estimate_z_from_pose(self.last_corners)
+                    if Z_pose is not None and self.min_valid_z <= Z_pose <= self.max_valid_z:
+                        Z = Z_pose
+
+                # 若 PnP 無法提供，再用尺寸估距優先
+                if Z is None and self.last_corners is not None:
+                    w_px, h_px = self._square_edge_px_hw(self.last_corners)
+                    w_eff = max(1.0, 0.5 * (w_px + h_px))   # 像素邊長的平均，避免除以 0
+                    f_eff = float(np.sqrt(self.fx * self.fy))  # 等效焦距，降低 fx≠fy 的偏差
+                    Z_size = (f_eff * SQUARE_SIZE_M) / w_eff
+                    if self.min_valid_z <= Z_size <= self.max_valid_z:
+                        Z = Z_size
+
+                # 最後才用深度備援/或尺寸回退
+                if Z is None:
+                    Z = self.depth_at(u, v)
+                    if Z is None and self.last_corners is not None:
+                        w_px = self._square_edge_px(self.last_corners)
+                        if w_px > 5:
+                            Z = (self.fx * SQUARE_SIZE_M) / w_px
+                            self.get_logger().warn("Depth invalid → fallback to size-based Z.")
+
+                if Z is None or not (self.min_valid_z <= Z <= self.max_valid_z):
+                    self.get_logger().warning(f'Z invalid: {Z}')
+                    return response
+
+                # 像素→相機座標
+                X = (u - self.cx) * Z / self.fx
+                Y = (v - self.cy) * Z / self.fy
+
+                response.ok = True
+                response.z  = float(Z)
+                response.dx = float(X*100.0)
+                response.dy = float(-Y*100.0)
+
+                self.get_logger().info(f"KV OK: (u,v)=({u:.1f},{v:.1f}), Z={Z:.3f} m, move (dx,dy)=({X:.3f},{-Y:.3f}) m")
             else:
-                self.get_logger().info('Table detection stopped')
-                response.ok = False
-                self.start = False
-                return response
+                self.get_logger().warning('Table detection NOT ready (vision/intrinsics).')
+            
+            self._stop_sub()
+            self.start = False
+            return response
 
         except Exception as e:
-            self.get_logger().error(f'table_callback error: {e}')
-            self.start = False
-            response.ok = False
+            self.get_logger().error(f'service error: {e}')
             return response
 
     # ---------- 視覺核心 ----------
@@ -282,7 +261,6 @@ class Table(Node):
 
         self.inliers = int(inliers.sum())
         return vis, (float(cx), float(cy)), corners_i, True
-    
     def _fallback_white_rect(self, frame):
         vis = frame.copy()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -438,10 +416,7 @@ class Table(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = Table()
-    executor = MultiThreadedExecutor()
-    executor.add_node(node)
-    executor.spin()
-    executor.shutdown()
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 
