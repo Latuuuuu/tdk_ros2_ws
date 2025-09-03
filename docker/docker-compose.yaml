@@ -23,7 +23,8 @@ services:
       - $PWD/../src/realsense-pkg:/home/realsense/tdk_ros2_ws/src/realsense-ros
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-      - ROS_DOMAIN_ID=42
+      - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=1
     group_add:
       - video
     privileged: true
@@ -51,8 +52,9 @@ services:
       - $HOME/.Xauthority:/home/gui/.Xauthority
     environment:
       - DISPLAY=${DISPLAY}
-      - ROS_DOMAIN_ID=42
+      - ROS_DOMAIN_ID=0
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - ROS_LOCALHOST_ONLY=1
     command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml address:=localhost port:=8765
 
   opencv:
@@ -68,7 +70,8 @@ services:
     container_name: tdk-opencv
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-      - ROS_DOMAIN_ID=42
+      - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=1
     volumes:
         - $PWD/../src/opencv-pkg:/home/opencv/tdk_ros2_ws/src/opencv_pkg
         - $PWD/../src/interfaces:/home/opencv/tdk_ros2_ws/src/interfaces
@@ -94,9 +97,9 @@ services:
       - DISPLAY=${DISPLAY}
       - XAUTHORITY=/home/abao/.Xauthority
       - ROS_WS=/home/abao/tdk_ros2_ws
-      - ROS_DOMAIN_ID=42                     
+      - ROS_DOMAIN_ID=0
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-      - ROS_LOCALHOST_ONLY=0  
+      - ROS_LOCALHOST_ONLY=1  
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -110,6 +113,9 @@ services:
     image: microros/micro-ros-agent:humble
     container_name: micro-ros-agent
     network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=1
     devices:
       - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF525370874967014655-if02:/dev/ttyACM0
     volumes:

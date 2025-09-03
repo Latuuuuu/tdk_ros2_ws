@@ -92,7 +92,7 @@ private:
         goal9.pose.pose.position.y = 616.0;
         goal9.pose.pose.orientation.z = 1.57;
         goal9.max_linear_speed = 50.0;
-        goal9.max_angular_speed = 1.0;
+        goal9.max_angular_speed = 0.1;
         goals_.push_back(goal9);
 
         Goal goal10;
@@ -116,7 +116,7 @@ private:
         goal13.pose.pose.position.y = 666.0;
         goal13.pose.pose.orientation.z = 1.57;
         goal13.max_linear_speed = 50.0;
-        goal13.max_angular_speed = 1.5;
+        goal13.max_angular_speed = 0.1;
         goals_.push_back(goal13);
     }
 
@@ -277,7 +277,7 @@ private:
 
     void table_response_callback(rclcpp::Client<interfaces::srv::KeyVisual>::SharedFuture future) {
         auto response = future.get();
-        double dx=-3.0, dy=0.0;
+        double dx=0.0, dy=0.0;
         if (response->ok) {
             dx = response->dx;
             dy = response->dy;
@@ -290,8 +290,9 @@ private:
         goals_.erase(goals_.begin());
         Goal goal;//夾取點
         goal.type = 0;
-        goal.pose.pose.position.x = x_ + dx ;//要調整鏡頭中心至夾取點的偏移
-        goal.pose.pose.position.y = y_ + dy;
+        if(y_ > 620)goal.pose.pose.position.x = x_ + dx - 3.0;
+        else goal.pose.pose.position.x = x_ + dx + 3.0;
+        goal.pose.pose.position.y = y_ + ( dy / 2.0 );
         goal.pose.pose.orientation.z = z_;
         goal.max_linear_speed = 50.0;
         goal.max_angular_speed = 0.1;
