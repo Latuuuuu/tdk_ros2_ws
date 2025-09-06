@@ -35,64 +35,64 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        // Goal goal1;// 第一關至第二關的銜接點
-        // goal1.type = 0;
-        // goal1.pose.pose.position.x = 0.0;
-        // goal1.pose.pose.position.y = 616.0;
-        // goal1.pose.pose.orientation.z = 0.0;
-        // goal1.max_linear_speed = 50.0;
-        // goal1.max_angular_speed = 0.0;
-        // goals_.push_back(goal1);
+        Goal goal1;// 第一關至第二關的銜接點
+        goal1.type = 0;
+        goal1.pose.pose.position.x = 0.0;
+        goal1.pose.pose.position.y = 6160.0;
+        goal1.pose.pose.orientation.z = 0.0;
+        goal1.max_linear_speed = 0.5;
+        goal1.max_angular_speed = 0.01;
+        goals_.push_back(goal1);
 
-        // Goal goal2;//第二關起點+轉向背對主桌
-        // goal2.type = 0;
-        // goal2.pose.pose.position.x = 83.0;
-        // goal2.pose.pose.position.y = 616.0;
-        // goal2.pose.pose.orientation.z = 3.14;
-        // goal2.max_linear_speed = 50.0;
-        // goal2.max_angular_speed = 1.0;
-        // goals_.push_back(goal2);
+        Goal goal2;//第二關起點+轉向背對主桌
+        goal2.type = 0;
+        goal2.pose.pose.position.x = 830.0;
+        goal2.pose.pose.position.y = 6160.0;
+        goal2.pose.pose.orientation.z = 3.14;
+        goal2.max_linear_speed = 0.5;
+        goal2.max_angular_speed = 0.2;
+        goals_.push_back(goal2);
 
-        // Goal goal4;//走到主桌前
-        // goal4.type = 0;
-        // goal4.pose.pose.position.x = 85.0;
-        // goal4.pose.pose.position.y = 666.0;
-        // goal4.pose.pose.orientation.z = 3.14;
-        // goal4.max_linear_speed = 50.0;
-        // goal4.max_angular_speed = 1.0;
-        // goals_.push_back(goal4);
+        Goal goal4;//走到主桌前
+        goal4.type = 0;
+        goal4.pose.pose.position.x = 850.0;
+        goal4.pose.pose.position.y = 6660.0;
+        goal4.pose.pose.orientation.z = 3.14;
+        goal4.max_linear_speed = 0.5;
+        goal4.max_angular_speed = 0.2;
+        goals_.push_back(goal4);
 
-        // Goal goal5;
-        // goal5.type = 3;
-        // goal5.arm_cmd = 1;
-        // goals_.push_back(goal5);
+        Goal goal5;
+        goal5.type = 3;
+        goal5.arm_cmd = 1;
+        goals_.push_back(goal5);
 
-        // Goal goal6;
-        // goal6.type = 1;
-        // goal6.start = 1;
-        // goals_.push_back(goal6);
+        Goal goal6;
+        goal6.type = 1;
+        goal6.start = 1;
+        goals_.push_back(goal6);
 
-        // Goal goal7;
-        // goal7.type = 3;
-        // goal7.arm_cmd = 2;
-        // goals_.push_back(goal7);
+        Goal goal7;
+        goal7.type = 3;
+        goal7.arm_cmd = 2;
+        goals_.push_back(goal7);
 
-        // Goal goal8;//走到主桌前
-        // goal8.type = 0;
-        // goal8.pose.pose.position.x = 83.0;
-        // goal8.pose.pose.position.y = 666.0;
-        // goal8.pose.pose.orientation.z = 3.14;
-        // goal8.max_linear_speed = 50.0;
-        // goal8.max_angular_speed = 1.0;
-        // goals_.push_back(goal8);
+        Goal goal8;//走到主桌前
+        goal8.type = 0;
+        goal8.pose.pose.position.x = 830.0;
+        goal8.pose.pose.position.y = 6660.0;
+        goal8.pose.pose.orientation.z = 3.14;
+        goal8.max_linear_speed = 0.5;
+        goal8.max_angular_speed = 0.2;
+        goals_.push_back(goal8);
 
         Goal goal9;//回起點+轉向
         goal9.type = 0;
-        goal9.pose.pose.position.x = 83.0;
-        goal9.pose.pose.position.y = 616.0;
+        goal9.pose.pose.position.x = 830.0;
+        goal9.pose.pose.position.y = 6160.0;
         goal9.pose.pose.orientation.z = 1.57;
-        goal9.max_linear_speed = 50.0;
-        goal9.max_angular_speed = 0.1;
+        goal9.max_linear_speed = 0.5;
+        goal9.max_angular_speed = 0.2;
         goals_.push_back(goal9);
 
         Goal goal10;
@@ -112,11 +112,11 @@ private:
 
         Goal goal13;//第二關終點
         goal13.type = 0;
-        goal13.pose.pose.position.x = -267;
-        goal13.pose.pose.position.y = 666.0;
+        goal13.pose.pose.position.x = -2670.0;
+        goal13.pose.pose.position.y = 6660.0;
         goal13.pose.pose.orientation.z = 1.57;
-        goal13.max_linear_speed = 50.0;
-        goal13.max_angular_speed = 0.1;
+        goal13.max_linear_speed = 0.5;
+        goal13.max_angular_speed = 0.2;
         goals_.push_back(goal13);
     }
 
@@ -216,50 +216,50 @@ private:
             goal2.type = 0;
             goal3.type = 0;
             if (num_ == 1) {
-                goal2.pose.pose.position.x = -151.0;
-                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.position.x = -1510.0;
+                goal2.pose.pose.position.y = 6160.0;
                 goal2.pose.pose.orientation.z = 3.14;
-                goal3.pose.pose.position.x = -148.0;
-                goal3.pose.pose.position.y = 641.0;
+                goal3.pose.pose.position.x = -1480.0;
+                goal3.pose.pose.position.y = 6410.0;
                 goal3.pose.pose.orientation.z = 3.14;
-                x_ = -148.0;
-                y_ = 641.0;
+                x_ = -1480.0;
+                y_ = 6410.0;
                 z_ = 3.14;
             } else if (num_ == 2) {
-                goal2.pose.pose.position.x = -151.0;
-                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.position.x = -1510.0;
+                goal2.pose.pose.position.y = 6160.0;
                 goal2.pose.pose.orientation.z = 0.0;
-                goal3.pose.pose.position.x = -148.0;
-                goal3.pose.pose.position.y = 591.0;
+                goal3.pose.pose.position.x = -1480.0;
+                goal3.pose.pose.position.y = 5910.0;
                 goal3.pose.pose.orientation.z = 0.0;
-                x_ = -148.0;
-                y_ = 591.0;
+                x_ = -1480.0;
+                y_ = 5910.0;
                 z_ = 0.0;
             } else if (num_ == 3) {
-                goal2.pose.pose.position.x = -81.0;
-                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.position.x = -810.0;
+                goal2.pose.pose.position.y = 6160.0;
                 goal2.pose.pose.orientation.z = 0.0;
-                goal3.pose.pose.position.x = -78.0;
-                goal3.pose.pose.position.y = 591.0;
+                goal3.pose.pose.position.x = -780.0;
+                goal3.pose.pose.position.y = 5910.0;
                 goal3.pose.pose.orientation.z = 0.0;
-                x_ = -78.0;
-                y_ = 591.0;
+                x_ = -780.0;
+                y_ = 5910.0;
                 z_ = 0.0;
             } else if (num_ == 4) {
-                goal2.pose.pose.position.x = -81.0;
-                goal2.pose.pose.position.y = 616.0;
+                goal2.pose.pose.position.x = -810.0;
+                goal2.pose.pose.position.y = 6160.0;
                 goal2.pose.pose.orientation.z = 3.14;
-                goal3.pose.pose.position.x = -78.0;
-                goal3.pose.pose.position.y = 641.0;
+                goal3.pose.pose.position.x = -780.0;
+                goal3.pose.pose.position.y = 6410.0;
                 goal3.pose.pose.orientation.z = 3.14;
-                x_ = -78.0;
-                y_ = 641.0;
+                x_ = -780.0;
+                y_ = 6410.0;
                 z_ = 3.14;
             }
-            goal2.max_linear_speed = 50.0;
-            goal2.max_angular_speed = 1.0;
-            goal3.max_linear_speed = 50.0;
-            goal3.max_angular_speed = 0.1;
+            goal2.max_linear_speed = 0.5;
+            goal2.max_angular_speed = 0.2;
+            goal3.max_linear_speed = 0.5;
+            goal3.max_angular_speed = 0.01;
             goals_.insert(goals_.begin()+6, goal3);
             goals_.insert(goals_.begin()+7, goal2);
             goals_.insert(goals_.begin()+3, goal2);
@@ -267,11 +267,11 @@ private:
             
             Goal goal;//夾杯子的位置
             goal.type = 0;
-            if (color_id_) goal.pose.pose.position.x = 63.0; else goal.pose.pose.position.x = 103.0;
-            goal.pose.pose.position.y = 666.0;
+            if (color_id_) goal.pose.pose.position.x = 630.0; else goal.pose.pose.position.x = 1030.0;
+            goal.pose.pose.position.y = 6660.0;
             goal.pose.pose.orientation.z = 3.14;
-            goal.max_linear_speed = 50.0;
-            goal.max_angular_speed = 0.1;
+            goal.max_linear_speed = 0.5;
+            goal.max_angular_speed = 0.2;
             goals_.insert(goals_.begin(), goal);
     }
 
@@ -290,12 +290,12 @@ private:
         goals_.erase(goals_.begin());
         Goal goal;//夾取點
         goal.type = 0;
-        if(y_ > 620)goal.pose.pose.position.x = x_ + dx - 3.0;
-        else goal.pose.pose.position.x = x_ + dx + 3.0;
+        if(y_ > 6200)goal.pose.pose.position.x = x_ + dx - 30.0;
+        else goal.pose.pose.position.x = x_ + dx + 30.0;
         goal.pose.pose.position.y = y_ + ( dy / 2.0 );
         goal.pose.pose.orientation.z = z_;
-        goal.max_linear_speed = 50.0;
-        goal.max_angular_speed = 0.1;
+        goal.max_linear_speed = 0.5;
+        goal.max_angular_speed = 0.01;
         goals_.insert(goals_.begin(), goal);
     }
     void arm_status_callback(const std_msgs::msg::Int32::SharedPtr msg) {
