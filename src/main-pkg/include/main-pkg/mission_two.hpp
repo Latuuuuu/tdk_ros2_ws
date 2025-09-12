@@ -40,7 +40,7 @@ private:
         goal1.pose.pose.position.x = 0.0;
         goal1.pose.pose.position.y = 6160.0;
         goal1.pose.pose.orientation.z = 0.0;
-        goal1.max_linear_speed = 0.5;
+        goal1.max_linear_speed = 20.0;
         goal1.max_angular_speed = 0.01;
         goals_.push_back(goal1);
 
@@ -49,7 +49,7 @@ private:
         goal2.pose.pose.position.x = 830.0;
         goal2.pose.pose.position.y = 6160.0;
         goal2.pose.pose.orientation.z = 3.14;
-        goal2.max_linear_speed = 0.5;
+        goal2.max_linear_speed = 20.0;
         goal2.max_angular_speed = 0.2;
         goals_.push_back(goal2);
 
@@ -58,7 +58,7 @@ private:
         goal4.pose.pose.position.x = 850.0;
         goal4.pose.pose.position.y = 6660.0;
         goal4.pose.pose.orientation.z = 3.14;
-        goal4.max_linear_speed = 0.5;
+        goal4.max_linear_speed = 20.0;
         goal4.max_angular_speed = 0.2;
         goals_.push_back(goal4);
 
@@ -82,7 +82,7 @@ private:
         goal8.pose.pose.position.x = 830.0;
         goal8.pose.pose.position.y = 6660.0;
         goal8.pose.pose.orientation.z = 3.14;
-        goal8.max_linear_speed = 0.5;
+        goal8.max_linear_speed = 20.0;
         goal8.max_angular_speed = 0.2;
         goals_.push_back(goal8);
 
@@ -91,7 +91,7 @@ private:
         goal9.pose.pose.position.x = 830.0;
         goal9.pose.pose.position.y = 6160.0;
         goal9.pose.pose.orientation.z = 1.57;
-        goal9.max_linear_speed = 0.5;
+        goal9.max_linear_speed = 20.0;
         goal9.max_angular_speed = 0.2;
         goals_.push_back(goal9);
 
@@ -115,7 +115,7 @@ private:
         goal13.pose.pose.position.x = -2670.0;
         goal13.pose.pose.position.y = 6660.0;
         goal13.pose.pose.orientation.z = 1.57;
-        goal13.max_linear_speed = 0.5;
+        goal13.max_linear_speed = 20.0;
         goal13.max_angular_speed = 0.2;
         goals_.push_back(goal13);
     }
@@ -256,9 +256,9 @@ private:
                 y_ = 6410.0;
                 z_ = 3.14;
             }
-            goal2.max_linear_speed = 0.5;
+            goal2.max_linear_speed = 20.0;
             goal2.max_angular_speed = 0.2;
-            goal3.max_linear_speed = 0.5;
+            goal3.max_linear_speed = 20.0;
             goal3.max_angular_speed = 0.01;
             goals_.insert(goals_.begin()+6, goal3);
             goals_.insert(goals_.begin()+7, goal2);
@@ -270,7 +270,7 @@ private:
             if (color_id_) goal.pose.pose.position.x = 630.0; else goal.pose.pose.position.x = 1030.0;
             goal.pose.pose.position.y = 6660.0;
             goal.pose.pose.orientation.z = 3.14;
-            goal.max_linear_speed = 0.5;
+            // goal.max_linear_speed = 20.0;
             goal.max_angular_speed = 0.2;
             goals_.insert(goals_.begin(), goal);
     }
@@ -294,7 +294,7 @@ private:
         else goal.pose.pose.position.x = x_ + dx + 30.0;
         goal.pose.pose.position.y = y_ + ( dy / 2.0 );
         goal.pose.pose.orientation.z = z_;
-        goal.max_linear_speed = 0.5;
+        goal.max_linear_speed = 20.0;
         goal.max_angular_speed = 0.01;
         goals_.insert(goals_.begin(), goal);
     }

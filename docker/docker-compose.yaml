@@ -117,7 +117,8 @@ services:
       - ROS_DOMAIN_ID=0
       - ROS_LOCALHOST_ONLY=0
     devices:
-      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF525370874967014655-if02:/dev/ttyACM0
+      # - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF525370874967014655-if02:/dev/ttyACM0
+      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_0668FF545456857187044913-if02:/dev/ttyACM0
     volumes:
       - /dev:/dev
     command: >
