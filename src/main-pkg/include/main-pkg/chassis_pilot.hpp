@@ -22,7 +22,7 @@ public:
         velocity_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/robot/cmd_vel", 10);    
         goal_server_ = this->create_service<interfaces::srv::GoalPoint>("/goal", std::bind(&ChassisPilot::set_goal, this, std::placeholders::_1, std::placeholders::_2));
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&ChassisPilot::publish_velocity, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(10),std::bind(&ChassisPilot::publish_velocity, this));
         
         RCLCPP_INFO(this->get_logger(), "ChassisPilot started.");
     }
@@ -104,7 +104,7 @@ private:
         const double direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
 
         if (!translation_complete()) {
-            const double v_target_mag = braking_speed(dist_to_goal,linear_acceleration_ * 0.8);
+            const double v_target_mag = braking_speed(dist_to_goal,linear_acceleration_ * 0.5);
             // const double v_target_mag = max_linear_speed_;
             double v_new_mag = v_target_mag;
             if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
@@ -177,11 +177,11 @@ private:
     double goal_x_ {0.0},goal_y_ {0.0},goal_yaw_ {0.0};
     bool have_goal_ {false};
     //parameter
-    double pos_tol_ {10}, yaw_tol_ {0.001};
+    double pos_tol_ {20}, yaw_tol_ {5};
     int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
-    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {5.0}, angular_acceleration_ {0.05},min_linear_speed_ {10.0};//cm/s
+    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {2.5}, angular_acceleration_ {0.05},min_linear_speed_ {1.0};//cm/s
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
     double control_dt_ {0.05};      
     // int    stop_hold_ticks_ {0}; 

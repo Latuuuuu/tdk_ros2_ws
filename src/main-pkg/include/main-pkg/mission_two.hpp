@@ -27,7 +27,7 @@ public:
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(100),std::bind(&MissionTwo::check_and_send_goal, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(10),std::bind(&MissionTwo::check_and_send_goal, this));
 
         RCLCPP_INFO(this->get_logger(), "MissionTwo started.");
     }
@@ -38,7 +38,7 @@ private:
         Goal goal1;// 第一關至第二關的銜接點
         goal1.type = 0;
         goal1.pose.pose.position.x = 0.0;
-        goal1.pose.pose.position.y = 6160.0;
+        goal1.pose.pose.position.y = 4500.0; //6160.0
         goal1.pose.pose.orientation.z = 0.0;
         goal1.max_linear_speed = 20.0;
         goal1.max_angular_speed = 0.01;
@@ -47,20 +47,20 @@ private:
         Goal goal2;//第二關起點+轉向背對主桌
         goal2.type = 0;
         goal2.pose.pose.position.x = 830.0;
-        goal2.pose.pose.position.y = 6160.0;
+        goal2.pose.pose.position.y = 4500.0; //6160.0
         goal2.pose.pose.orientation.z = 3.14;
         goal2.max_linear_speed = 20.0;
         goal2.max_angular_speed = 0.2;
         goals_.push_back(goal2);
 
-        Goal goal4;//走到主桌前
-        goal4.type = 0;
-        goal4.pose.pose.position.x = 850.0;
-        goal4.pose.pose.position.y = 6660.0;
-        goal4.pose.pose.orientation.z = 3.14;
-        goal4.max_linear_speed = 20.0;
-        goal4.max_angular_speed = 0.2;
-        goals_.push_back(goal4);
+        // Goal goal4;//走到主桌前
+        // goal4.type = 0;
+        // goal4.pose.pose.position.x = 850.0;
+        // goal4.pose.pose.position.y = 6660.0;
+        // goal4.pose.pose.orientation.z = 3.14;
+        // goal4.max_linear_speed = 20.0;
+        // goal4.max_angular_speed = 0.2;
+        // goals_.push_back(goal4);
 
         Goal goal5;
         goal5.type = 3;
