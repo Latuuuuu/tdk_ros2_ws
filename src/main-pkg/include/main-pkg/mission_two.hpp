@@ -17,6 +17,7 @@ class MissionTwo : public rclcpp::Node {
 public:
     MissionTwo() : Node("mission_2") {
         // 建立目標點的 client
+        mission_status_pub_ = this->create_publisher<std_msgs::msg::Int32>("/mission_status", 10);
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
         menu_client_ = this->create_client<interfaces::srv::Menu>("/menu");
         table_client_ = this->create_client<interfaces::srv::KeyVisual>("/table");
@@ -53,83 +54,86 @@ private:
         goal2.max_angular_speed = 0.2;
         goals_.push_back(goal2);
 
-        // Goal goal4;//走到主桌前
-        // goal4.type = 0;
-        // goal4.pose.pose.position.x = 850.0;
-        // goal4.pose.pose.position.y = 6660.0;
-        // goal4.pose.pose.orientation.z = 3.14;
-        // goal4.max_linear_speed = 20.0;
-        // goal4.max_angular_speed = 0.2;
-        // goals_.push_back(goal4);
+        Goal goal4;//走到主桌前
+        goal4.type = 0;
+        goal4.pose.pose.position.x = 850.0;
+        goal4.pose.pose.position.y = 6660.0;
+        goal4.pose.pose.orientation.z = 3.14;
+        goal4.max_linear_speed = 20.0;
+        goal4.max_angular_speed = 0.2;
+        goals_.push_back(goal4);
 
-        Goal goal5;
-        goal5.type = 3;
-        goal5.arm_cmd = 1;
-        goals_.push_back(goal5);
+        // Goal goal5;
+        // goal5.type = 3;
+        // goal5.arm_cmd = 1;
+        // goals_.push_back(goal5);
 
-        Goal goal6;
-        goal6.type = 1;
-        goal6.start = 1;
-        goals_.push_back(goal6);
+        // Goal goal6;
+        // goal6.type = 1;
+        // goal6.start = 1;
+        // goals_.push_back(goal6);
 
-        Goal goal7;
-        goal7.type = 3;
-        goal7.arm_cmd = 2;
-        goals_.push_back(goal7);
+        // Goal goal7;
+        // goal7.type = 3;
+        // goal7.arm_cmd = 2;
+        // goals_.push_back(goal7);
 
-        Goal goal8;//走到主桌前
-        goal8.type = 0;
-        goal8.pose.pose.position.x = 830.0;
-        goal8.pose.pose.position.y = 6660.0;
-        goal8.pose.pose.orientation.z = 3.14;
-        goal8.max_linear_speed = 20.0;
-        goal8.max_angular_speed = 0.2;
-        goals_.push_back(goal8);
+        // Goal goal8;//走到主桌前
+        // goal8.type = 0;
+        // goal8.pose.pose.position.x = 830.0;
+        // goal8.pose.pose.position.y = 6660.0;
+        // goal8.pose.pose.orientation.z = 3.14;
+        // goal8.max_linear_speed = 20.0;
+        // goal8.max_angular_speed = 0.2;
+        // goals_.push_back(goal8);
 
-        Goal goal9;//回起點+轉向
-        goal9.type = 0;
-        goal9.pose.pose.position.x = 830.0;
-        goal9.pose.pose.position.y = 6160.0;
-        goal9.pose.pose.orientation.z = 1.57;
-        goal9.max_linear_speed = 20.0;
-        goal9.max_angular_speed = 0.2;
-        goals_.push_back(goal9);
+        // Goal goal9;//回起點+轉向
+        // goal9.type = 0;
+        // goal9.pose.pose.position.x = 830.0;
+        // goal9.pose.pose.position.y = 6160.0;
+        // goal9.pose.pose.orientation.z = 1.57;
+        // goal9.max_linear_speed = 20.0;
+        // goal9.max_angular_speed = 0.2;
+        // goals_.push_back(goal9);
 
-        Goal goal10;
-        goal10.type = 3;
-        goal10.arm_cmd = 3;
-        goals_.push_back(goal10);
+        // Goal goal10;
+        // goal10.type = 3;
+        // goal10.arm_cmd = 3;
+        // goals_.push_back(goal10);
 
-        Goal goal11;
-        goal11.type = 2;
-        goal11.start = 1;
-        goals_.push_back(goal11);
+        // Goal goal11;
+        // goal11.type = 2;
+        // goal11.start = 1;
+        // goals_.push_back(goal11);
 
-        Goal goal12;
-        goal12.type = 3;
-        goal12.arm_cmd = 4;
-        goals_.push_back(goal12);
+        // Goal goal12;
+        // goal12.type = 3;
+        // goal12.arm_cmd = 4;
+        // goals_.push_back(goal12);
 
-        Goal goal13;//第二關終點
-        goal13.type = 0;
-        goal13.pose.pose.position.x = -2670.0;
-        goal13.pose.pose.position.y = 6660.0;
-        goal13.pose.pose.orientation.z = 1.57;
-        goal13.max_linear_speed = 20.0;
-        goal13.max_angular_speed = 0.2;
-        goals_.push_back(goal13);
+        // Goal goal13;//第二關終點
+        // goal13.type = 0;
+        // goal13.pose.pose.position.x = -2670.0;
+        // goal13.pose.pose.position.y = 6660.0;
+        // goal13.pose.pose.orientation.z = 1.57;
+        // goal13.max_linear_speed = 20.0;
+        // goal13.max_angular_speed = 0.2;
+        // goals_.push_back(goal13);
     }
 
     void check_and_send_goal() {
         // 如果目前沒有目標，或目標序列已完成，則退出
         if (goals_.empty()) {
-            RCLCPP_INFO(this->get_logger(), "All goals completed.");
-            rclcpp::shutdown();
+            RCLCPP_INFO(this->get_logger(), "Mission Two Completed.");
+            // rclcpp::shutdown();
+            std_msgs::msg::Int32 status;
+            status.data = 2; // Mission Two 的 ID
+            mission_status_pub_->publish(status);
             return;
         }
 
         // 如果正在等待服務回應，則不發送新目標
-        if (waiting_for_response_) {
+        if (waiting_for_response_ && goals_.front().type != 3) {
             return;
         }
 
@@ -314,7 +318,6 @@ private:
             RCLCPP_DEBUG(this->get_logger(), "Arm status=%d (waiting %d)", msg->data, pending_arm_cmd_);
         }
     }
-
     struct Goal {
         int type;   //chassis = 0, camera_menu =1, camera_table =2, arm =3
         geometry_msgs::msg::PoseStamped pose;
@@ -337,4 +340,5 @@ private:
     bool waiting_for_arm_{false};
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr arm_cmd_pub_;
     rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr arm_status_sub_;
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr mission_status_pub_;
 };

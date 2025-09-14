@@ -29,6 +29,14 @@ add_executable(MissionTwo src/mission_two.cpp)
 ament_target_dependencies(MissionTwo rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(MissionTwo PRIVATE include)
 
+add_executable(MissionFour src/mission_four.cpp)
+ament_target_dependencies(MissionFour rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
+target_include_directories(MissionFour PRIVATE include)
+
+add_executable(MissionManager src/mission_manager.cpp)
+ament_target_dependencies(MissionManager rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
+target_include_directories(MissionManager PRIVATE include)
+
 add_executable(SimLower src/sim_lower.cpp)
 target_include_directories(SimLower PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -38,6 +46,8 @@ install(TARGETS
   SimLower
   ChassisPilot
   MissionTwo
+  MissionFour
+  MissionManager
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include)

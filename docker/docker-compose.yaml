@@ -118,11 +118,13 @@ services:
       - ROS_LOCALHOST_ONLY=0
     devices:
       # - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF525370874967014655-if02:/dev/ttyACM0
-      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_0668FF545456857187044913-if02:/dev/ttyACM0
+      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_0668FF545456857187044913-if02:/dev/ttyACM0 #底盤
+      # - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_02190196523100193638414B-if02:/dev/ttyACM0 ＃手臂
     volumes:
       - /dev:/dev
     command: >
-      serial --dev /dev/ttyACM0 --baudrate 115200 -v6
+      serial --dev /dev/ttyACM0 --baudrate 115200 -v4
+      # multi serial --dev /dev/ttyACM0 --dev /dev/ttyACM1 --baudrate 115200 -v4
     group_add:
       - dialout
     restart: unless-stopped

@@ -14,9 +14,12 @@ def generate_launch_description():
     ])
 
     main_group = GroupAction([
+        # Node(package='main-pkg', executable='MissionManager', output='screen'),
         # Node(package='main-pkg', executable='SimLower',     output='screen'),
         Node(package='main-pkg', executable='ChassisPilot', output='screen'),
-        Node(package='main-pkg', executable='MissionTwo',   output='screen'),
+        # Node(package='main-pkg', executable='MissionTwo',   output='screen'),
+        Node(package='main-pkg', executable='MissionFour',  output='screen'),
+
     ])
 
     return LaunchDescription([

@@ -110,14 +110,16 @@ private:
             if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
             if(v_new_mag < min_linear_speed_) v_new_mag = min_linear_speed_;
             if(v_new_mag > max_linear_speed_) v_new_mag = max_linear_speed_;
-            // v_new_mag = std::clamp(v_new_mag, min_linear_speed_, max_linear_speed_);
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
-            "Debug: dist=%.2f,v_new=%.2f, current=%.2f, target=%.2f, step=%.2f, after_ramp=%.2f, min_speed=%.2f, max_speed=%.2f", 
-            dist_to_goal, v_new_mag, linear_velocity_now_, v_target_mag, linear_acceleration_, 
-            ramp_towards(linear_velocity_now_, v_target_mag, linear_acceleration_),
-            min_linear_speed_, max_linear_speed_);
-            msg.linear.x = v_new_mag * std::cos(direction);
-            msg.linear.y = v_new_mag * std::sin(direction);
+            v_new_mag = std::clamp(v_new_mag, min_linear_speed_, max_linear_speed_);
+            // RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+            // "Debug: dist=%.2f,v_new=%.2f, current=%.2f, target=%.2f, step=%.2f, after_ramp=%.2f, min_speed=%.2f, max_speed=%.2f", 
+            // dist_to_goal, v_new_mag, linear_velocity_now_, v_target_mag, linear_acceleration_, 
+            // ramp_towards(linear_velocity_now_, v_target_mag, linear_acceleration_),
+            // min_linear_speed_, max_linear_speed_);
+            double global_vx = v_new_mag * std::cos(direction);
+            double global_vy = v_new_mag * std::sin(direction);
+            msg.linear.x = global_vx * std::cos(yaw_) + global_vy * std::sin(yaw_);
+            msg.linear.y = -global_vx * std::sin(yaw_) + global_vy * std::cos(yaw_);
             msg.angular.z = 0.0;
         }
         else{
