@@ -38,20 +38,30 @@ private:
         // 初始化目標點序列
         Goal goal1;// 第一關至第二關的銜接點
         goal1.type = 0;
-        goal1.pose.pose.position.x = 0.0;
-        goal1.pose.pose.position.y = 4500.0; //6160.0
-        goal1.pose.pose.orientation.z = 0.0;
+        goal1.pose.pose.position.x = 0.0;//0.0
+        goal1.pose.pose.position.y = 6160.0; //6160.0
+        goal1.pose.pose.orientation.z = 4.71;//0.0
         goal1.max_linear_speed = 20.0;
-        goal1.max_angular_speed = 0.01;
+        goal1.max_angular_speed = 0.5;
+        goal1.move_mode = 11;
         goals_.push_back(goal1);
+        goal1_.move_mode = 21;
+        goals_.push_back(goal1_);
+        goal1_.move_mode = 10;
+        goals_.push_back(goal1_);
 
         Goal goal2;//第二關起點+轉向背對主桌
         goal2.type = 0;
         goal2.pose.pose.position.x = 830.0;
-        goal2.pose.pose.position.y = 4500.0; //6160.0
+        goal2.pose.pose.position.y = 6160.0; //6160.0
         goal2.pose.pose.orientation.z = 3.14;
         goal2.max_linear_speed = 20.0;
-        goal2.max_angular_speed = 0.2;
+        goal2.max_angular_speed = 0.5;
+        goal2.move_mode = 11;
+        goals_.push_back(goal2);
+        goal2.move_mode = 21;
+        goals_.push_back(goal2);
+        goal2.move_mode = 10;
         goals_.push_back(goal2);
 
         Goal goal4;//走到主桌前
@@ -60,7 +70,10 @@ private:
         goal4.pose.pose.position.y = 6660.0;
         goal4.pose.pose.orientation.z = 3.14;
         goal4.max_linear_speed = 20.0;
-        goal4.max_angular_speed = 0.2;
+        goal4.max_angular_speed = 0.5;
+        goal4.move_mode = 10;
+        goals_.push_back(goal4);
+        goal4.move_mode = 21;
         goals_.push_back(goal4);
 
         // Goal goal5;
@@ -78,23 +91,27 @@ private:
         // goal7.arm_cmd = 2;
         // goals_.push_back(goal7);
 
-        // Goal goal8;//走到主桌前
-        // goal8.type = 0;
-        // goal8.pose.pose.position.x = 830.0;
-        // goal8.pose.pose.position.y = 6660.0;
-        // goal8.pose.pose.orientation.z = 3.14;
-        // goal8.max_linear_speed = 20.0;
-        // goal8.max_angular_speed = 0.2;
-        // goals_.push_back(goal8);
+        Goal goal8;//倒車走到主桌前
+        goal8.type = 0;
+        goal8.pose.pose.position.x = 830.0;
+        goal8.pose.pose.position.y = 6660.0;
+        goal8.pose.pose.orientation.z = 3.14;
+        goal8.max_linear_speed = 20.0;
+        goal8.max_angular_speed = 0.5;
+        goal8.move_mode = 10;
+        goals_.push_back(goal8);
 
-        // Goal goal9;//回起點+轉向
-        // goal9.type = 0;
-        // goal9.pose.pose.position.x = 830.0;
-        // goal9.pose.pose.position.y = 6160.0;
-        // goal9.pose.pose.orientation.z = 1.57;
-        // goal9.max_linear_speed = 20.0;
-        // goal9.max_angular_speed = 0.2;
-        // goals_.push_back(goal9);
+        Goal goal9;//回起點+轉向
+        goal9.type = 0;
+        goal9.pose.pose.position.x = 830.0;
+        goal9.pose.pose.position.y = 6160.0;
+        goal9.pose.pose.orientation.z = 1.57;
+        goal9.max_linear_speed = 20.0;
+        goal9.max_angular_speed = 0.5;
+        goal9.move_mode = 11;
+        goals_.push_back(goal9);
+        goal9.move_mode = 21;
+        goals_.push_back(goal9);
 
         // Goal goal10;
         // goal10.type = 3;
@@ -111,14 +128,17 @@ private:
         // goal12.arm_cmd = 4;
         // goals_.push_back(goal12);
 
-        // Goal goal13;//第二關終點
-        // goal13.type = 0;
-        // goal13.pose.pose.position.x = -2670.0;
-        // goal13.pose.pose.position.y = 6660.0;
-        // goal13.pose.pose.orientation.z = 1.57;
-        // goal13.max_linear_speed = 20.0;
-        // goal13.max_angular_speed = 0.2;
-        // goals_.push_back(goal13);
+        Goal goal13;//第二關終點
+        goal13.type = 0;
+        goal13.pose.pose.position.x = -2670.0;
+        goal13.pose.pose.position.y = 6660.0;
+        goal13.pose.pose.orientation.z = 1.57;
+        goal13.max_linear_speed = 20.0;
+        goal13.max_angular_speed = 0.5;
+        goal13.move_mode = 11;
+        goals_.push_back(goal13);
+        goal13.move_mode = 21;
+        goals_.push_back(goal13);
     }
 
     void check_and_send_goal() {
@@ -261,21 +281,30 @@ private:
                 z_ = 3.14;
             }
             goal2.max_linear_speed = 20.0;
-            goal2.max_angular_speed = 0.2;
+            goal2.max_angular_speed = 0.5;
             goal3.max_linear_speed = 20.0;
             goal3.max_angular_speed = 0.01;
-            goals_.insert(goals_.begin()+6, goal3);
-            goals_.insert(goals_.begin()+7, goal2);
-            goals_.insert(goals_.begin()+3, goal2);
-            goals_.insert(goals_.begin()+4, goal3);
+            goal2.move_mode = 11;
+            goals_.insert(goals_.begin()+4, goal2);//去餐桌中點
+            goal2.move_mode = 21;
+            goals_.insert(goals_.begin()+5, goal2);//去餐桌中點
+            goal3.move_mode = 10;
+            goals_.insert(goals_.begin()+6, goal3);//去餐桌前
+            goals_.insert(goals_.begin()+10, goal3);//去餐桌前
+            goal2.move_mode = 11;
+            goals_.insert(goals_.begin()+11, goal2);//去餐桌中點
+            goal2.pose.pose.orientation.z = 1.57;
+            goal2.move_mode = 21;
+            goals_.insert(goals_.begin()+12, goal2);//去餐桌中點
             
             Goal goal;//夾杯子的位置
             goal.type = 0;
             if (color_id_) goal.pose.pose.position.x = 630.0; else goal.pose.pose.position.x = 1030.0;
             goal.pose.pose.position.y = 6660.0;
             goal.pose.pose.orientation.z = 3.14;
-            // goal.max_linear_speed = 20.0;
-            goal.max_angular_speed = 0.2;
+            goal.max_linear_speed = 20.0;
+            goal.max_angular_speed = 0.5;
+            goal.move_mode = 10;
             goals_.insert(goals_.begin(), goal);
     }
 
@@ -299,7 +328,8 @@ private:
         goal.pose.pose.position.y = y_ + ( dy / 2.0 );
         goal.pose.pose.orientation.z = z_;
         goal.max_linear_speed = 20.0;
-        goal.max_angular_speed = 0.01;
+        goal.max_angular_speed = 0.5;
+        goal.move_mode = 10;
         goals_.insert(goals_.begin(), goal);
     }
     void arm_status_callback(const std_msgs::msg::Int32::SharedPtr msg) {

@@ -54,7 +54,7 @@ private:
         wz_meas_ = msg->twist.twist.angular.z;
 
         linear_velocity_now_ = std::hypot(vx_meas_, vy_meas_);
-        angular_velocity_now_ = wz_meas_;
+        angular_velocity_now_ = std::abs(wz_meas_);
 
         have_state_ = true;
 
@@ -69,6 +69,7 @@ private:
 
         max_linear_speed_ = request->max_linear_speed;
         max_angular_speed_ = request->max_angular_speed;
+        move_mode_ = request->move_mode;
 
         update_dist();
 
@@ -103,7 +104,7 @@ private:
 
         const double direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
 
-        if (!translation_complete()) {
+        if (move_mode_/ 10 == 1) {
             const double v_target_mag = braking_speed(dist_to_goal,linear_acceleration_ * 0.5);
             // const double v_target_mag = max_linear_speed_;
             double v_new_mag = v_target_mag;
@@ -122,18 +123,37 @@ private:
             msg.linear.y = -global_vx * std::sin(yaw_) + global_vy * std::cos(yaw_);
             msg.angular.z = 0.0;
         }
-        else{
-            const double w_target_mag = braking_speed(yaw_to_goal,
-                                                    /*a=*/angular_acceleration_/0.05);
-            const double w_new_mag = ramp_towards(angular_velocity_now_, w_target_mag, angular_acceleration_);
+        else if(move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,"rotating to yaw=%.2f (diff=%.2f)", goal_yaw_, yaw_to_goal);
+            const double w_target_mag = braking_speed(yaw_to_goal,angular_acceleration_*0.5);
+            double w_new_mag = w_target_mag;
+            if(angular_velocity_now_ < w_new_mag) w_new_mag = std::min(angular_velocity_now_ + angular_acceleration_, w_target_mag);
+            if(w_new_mag < min_angular_speed_) w_new_mag = min_angular_speed_;
+            if(w_new_mag > max_angular_speed_) w_new_mag = max_angular_speed_;
+            w_new_mag = std::clamp(w_new_mag, min_angular_speed_, max_angular_speed_);
             msg.linear.x = 0.0;
             msg.linear.y = 0.0;
-            msg.angular.z = w_new_mag;
+            if(move_mode_ / 10 == 2) msg.angular.z = -w_new_mag; //clockwise
+            else                     msg.angular.z = w_new_mag; //counterclockwise
+        }else{
+            msg.linear.x = 0.0;
+            msg.linear.y = 0.0;
+            msg.angular.z = 0.0;
+        }
+        if(move_mode_ % 10 == 1){
+            msg.angular.z = 1.0;
+        }else{
+            msg.angular.z = 0.0;
         }
         velocity_publisher_->publish(msg);
     }
 
     bool complete_goal() {
+        if (move_mode_) {
+            return translation_complete();
+        }else{
+            return rotation_complete();
+        }
         return (translation_complete() && rotation_complete());
     }
 
@@ -179,14 +199,14 @@ private:
     double goal_x_ {0.0},goal_y_ {0.0},goal_yaw_ {0.0};
     bool have_goal_ {false};
     //parameter
-    double pos_tol_ {20}, yaw_tol_ {5};
+    double pos_tol_ {20}, yaw_tol_ {0.1};
     int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
-    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {2.5}, angular_acceleration_ {0.05},min_linear_speed_ {1.0};//cm/s
+    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {2.5}, angular_acceleration_ {0.1},min_linear_speed_ {5.0},min_angular_speed_ {0.1};//cm/s
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
-    double control_dt_ {0.05};      
-    // int    stop_hold_ticks_ {0}; 
+    double control_dt_ {0.05};   
+    int move_mode_ {10}; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 01: trace, 00: not trace
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr     velocity_publisher_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr    position_subscriber_;

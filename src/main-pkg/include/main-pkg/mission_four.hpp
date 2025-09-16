@@ -39,16 +39,18 @@ private:
         goal1.pose.pose.position.y = 3350.0;
         goal1.pose.pose.orientation.z = 3.14;
         goal1.max_linear_speed = 20.0;
-        goal1.max_angular_speed = 0.2;
+        goal1.max_angular_speed = 0.5;
+        goal1.move_mode = 10;
         goals_.push_back(goal1);
 
         Goal goal2;//第二關起點+轉向背對主桌
         goal2.type = 0;
         goal2.pose.pose.position.x = -4920.0;
-        goal2.pose.pose.position.y = 2550.0; //6160.0
+        goal2.pose.pose.position.y = 2550.0;
         goal2.pose.pose.orientation.z = 3.14;
         goal2.max_linear_speed = 20.0;
-        goal2.max_angular_speed = 0.2;
+        goal2.max_angular_speed = 0.0;
+        goal2.move_mode = 10;
         goals_.push_back(goal2);
 
         Goal goal3;//走到主桌前
@@ -58,6 +60,7 @@ private:
         goal3.pose.pose.orientation.z = 3.14;
         goal3.max_linear_speed = 20.0;
         goal3.max_angular_speed = 0.2;
+        goal3.move_mode = 10;
         goals_.push_back(goal3);
 
         Goal goal4;//走到主桌前
@@ -67,6 +70,7 @@ private:
         goal4.pose.pose.orientation.z = 3.14;
         goal4.max_linear_speed = 20.0;
         goal4.max_angular_speed = 0.2;
+        goal4.move_mode = 10;
         goals_.push_back(goal4);
 
         Goal goal5;//回起點+轉向
@@ -76,6 +80,7 @@ private:
         goal5.pose.pose.orientation.z = 3.14;
         goal5.max_linear_speed = 20.0;
         goal5.max_angular_speed = 0.2;
+        goal5.move_mode = 10;
         goals_.push_back(goal5);
 
         Goal goal6;//第二關終點
@@ -85,6 +90,7 @@ private:
         goal6.pose.pose.orientation.z = 3.14;
         goal6.max_linear_speed = 20.0;
         goal6.max_angular_speed = 0.2;
+        goal6.move_mode = 10;
         goals_.push_back(goal6);
 
         Goal goal7;//第二關終點
@@ -94,6 +100,7 @@ private:
         goal7.pose.pose.orientation.z = 3.14;
         goal7.max_linear_speed = 20.0;
         goal7.max_angular_speed = 0.2;
+        goal7.move_mode = 10;
         goals_.push_back(goal7);
 
         Goal goal8;//第二關終點
@@ -103,6 +110,7 @@ private:
         goal8.pose.pose.orientation.z = 3.14;
         goal8.max_linear_speed = 20.0;
         goal8.max_angular_speed = 0.2;
+        goal8.move_mode = 10;
         goals_.push_back(goal8);
 
         Goal goal9;//第二關終點
@@ -112,6 +120,7 @@ private:
         goal9.pose.pose.orientation.z = 3.14;
         goal9.max_linear_speed = 20.0;
         goal9.max_angular_speed = 0.2;
+        goal9.move_mode = 10;
         goals_.push_back(goal9);
 
         Goal goal10;//第二關終點
@@ -121,6 +130,7 @@ private:
         goal10.pose.pose.orientation.z = 3.14;
         goal10.max_linear_speed = 20.0;
         goal10.max_angular_speed = 0.2;
+        goal10.move_mode = 10;
         goals_.push_back(goal10);
 
         Goal goal11;//第二關終點
@@ -130,6 +140,7 @@ private:
         goal11.pose.pose.orientation.z = 3.14;
         goal11.max_linear_speed = 20.0;
         goal11.max_angular_speed = 0.2;
+        goal11.move_mode = 10;
         goals_.push_back(goal11);
 
         Goal goal12;//第二關終點
@@ -139,6 +150,7 @@ private:
         goal12.pose.pose.orientation.z = 3.14;
         goal12.max_linear_speed = 20.0;
         goal12.max_angular_speed = 0.2;
+        goal12.move_mode = 10;
         goals_.push_back(goal12);
 
         Goal goal13;//第二關終點
@@ -148,6 +160,7 @@ private:
         goal13.pose.pose.orientation.z = 3.14;
         goal13.max_linear_speed = 20.0;
         goal13.max_angular_speed = 0.2;
+        goal13.move_mode = 10;
         goals_.push_back(goal13);
 
         Goal goal14;//第二關終點
@@ -157,6 +170,7 @@ private:
         goal14.pose.pose.orientation.z = 3.14;
         goal14.max_linear_speed = 20.0;
         goal14.max_angular_speed = 0.2;
+        goal14.move_mode = 10;
         goals_.push_back(goal14);
 
         Goal goal15;//第二關終點
@@ -166,6 +180,7 @@ private:
         goal15.pose.pose.orientation.z = 3.14;
         goal15.max_linear_speed = 20.0;
         goal15.max_angular_speed = 0.2;
+        goal15.move_mode = 10;
         goals_.push_back(goal15);
     }
 
@@ -248,6 +263,7 @@ private:
         double max_angular_speed;
         bool start;
         int arm_cmd ;
+        int move_mode; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 01: trace, 00: not trace
     };
 
     // 成員變數
