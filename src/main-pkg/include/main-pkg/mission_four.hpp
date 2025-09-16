@@ -35,148 +35,148 @@ private:
         // 初始化目標點序列
         Goal goal1;
         goal1.type = 0;
-        goal1.pose.pose.position.x = -4920.0;
-        goal1.pose.pose.position.y = 3350.0;
+        goal1.pose.pose.position.x = -492.0;
+        goal1.pose.pose.position.y = 335.0;
         goal1.pose.pose.orientation.z = 3.14;
         goal1.max_linear_speed = 20.0;
         goal1.max_angular_speed = 0.5;
         goal1.move_mode = 10;
         goals_.push_back(goal1);
 
-        Goal goal2;//第二關起點+轉向背對主桌
+        Goal goal2;
         goal2.type = 0;
-        goal2.pose.pose.position.x = -4920.0;
-        goal2.pose.pose.position.y = 2550.0;
+        goal2.pose.pose.position.x = -492.0;
+        goal2.pose.pose.position.y = 255.0;
         goal2.pose.pose.orientation.z = 3.14;
         goal2.max_linear_speed = 20.0;
         goal2.max_angular_speed = 0.0;
         goal2.move_mode = 10;
         goals_.push_back(goal2);
 
-        Goal goal3;//走到主桌前
+        Goal goal3;
         goal3.type = 0;
-        goal3.pose.pose.position.x = -4780.0;
-        goal3.pose.pose.position.y = 2550.0;
+        goal3.pose.pose.position.x = -478.0;
+        goal3.pose.pose.position.y = 255.0;
         goal3.pose.pose.orientation.z = 3.14;
         goal3.max_linear_speed = 20.0;
         goal3.max_angular_speed = 0.2;
         goal3.move_mode = 10;
         goals_.push_back(goal3);
 
-        Goal goal4;//走到主桌前
+        Goal goal4;
         goal4.type = 0;
-        goal4.pose.pose.position.x = -4780.0;
-        goal4.pose.pose.position.y = 2050.0;
+        goal4.pose.pose.position.x = -478.0;
+        goal4.pose.pose.position.y = 205.0;
         goal4.pose.pose.orientation.z = 3.14;
         goal4.max_linear_speed = 20.0;
         goal4.max_angular_speed = 0.2;
         goal4.move_mode = 10;
         goals_.push_back(goal4);
 
-        Goal goal5;//回起點+轉向
+        Goal goal5;
         goal5.type = 0;
-        goal5.pose.pose.position.x = -3960.0;
-        goal5.pose.pose.position.y = 2050.0;
+        goal5.pose.pose.position.x = -396.0;
+        goal5.pose.pose.position.y = 205.0;
         goal5.pose.pose.orientation.z = 3.14;
         goal5.max_linear_speed = 20.0;
         goal5.max_angular_speed = 0.2;
         goal5.move_mode = 10;
         goals_.push_back(goal5);
 
-        Goal goal6;//第二關終點
+        Goal goal6;
         goal6.type = 0;
-        goal6.pose.pose.position.x = -3960.0;
-        goal6.pose.pose.position.y = 1820.0;
+        goal6.pose.pose.position.x = -396.0;
+        goal6.pose.pose.position.y = 182.0;
         goal6.pose.pose.orientation.z = 3.14;
         goal6.max_linear_speed = 20.0;
         goal6.max_angular_speed = 0.2;
         goal6.move_mode = 10;
         goals_.push_back(goal6);
 
-        Goal goal7;//第二關終點
+        Goal goal7;
         goal7.type = 0;
-        goal7.pose.pose.position.x = -3150.0;
-        goal7.pose.pose.position.y = 1820.0;
+        goal7.pose.pose.position.x = -315.0;
+        goal7.pose.pose.position.y = 182.0;
         goal7.pose.pose.orientation.z = 3.14;
         goal7.max_linear_speed = 20.0;
         goal7.max_angular_speed = 0.2;
         goal7.move_mode = 10;
         goals_.push_back(goal7);
 
-        Goal goal8;//第二關終點
+        Goal goal8;
         goal8.type = 0;
-        goal8.pose.pose.position.x = -3150.0;
-        goal8.pose.pose.position.y = 1050.0;
+        goal8.pose.pose.position.x = -315.0;
+        goal8.pose.pose.position.y = 105.0;
         goal8.pose.pose.orientation.z = 3.14;
         goal8.max_linear_speed = 20.0;
         goal8.max_angular_speed = 0.2;
         goal8.move_mode = 10;
         goals_.push_back(goal8);
 
-        Goal goal9;//第二關終點
-        goal9.type = 0;
-        goal9.pose.pose.position.x = -3150.0;
-        goal9.pose.pose.position.y = 1050.0;
-        goal9.pose.pose.orientation.z = 3.14;
-        goal9.max_linear_speed = 20.0;
-        goal9.max_angular_speed = 0.2;
-        goal9.move_mode = 10;
-        goals_.push_back(goal9);
+        // Goal goal9;
+        // goal9.type = 0;
+        // goal9.pose.pose.position.x = -315.0;
+        // goal9.pose.pose.position.y = 105.0;
+        // goal9.pose.pose.orientation.z = 3.14;
+        // goal9.max_linear_speed = 20.0;
+        // goal9.max_angular_speed = 0.2;
+        // goal9.move_mode = 10;
+        // goals_.push_back(goal9);
 
-        Goal goal10;//第二關終點
+        Goal goal10;
         goal10.type = 0;
-        goal10.pose.pose.position.x = -3960.0;
-        goal10.pose.pose.position.y = 1050.0;
+        goal10.pose.pose.position.x = -396.0;
+        goal10.pose.pose.position.y = 105.0;
         goal10.pose.pose.orientation.z = 3.14;
         goal10.max_linear_speed = 20.0;
         goal10.max_angular_speed = 0.2;
         goal10.move_mode = 10;
         goals_.push_back(goal10);
 
-        Goal goal11;//第二關終點
+        Goal goal11;
         goal11.type = 0;
-        goal11.pose.pose.position.x = -3960.0;
-        goal11.pose.pose.position.y = 930.0;
+        goal11.pose.pose.position.x = -396.0;
+        goal11.pose.pose.position.y = 93.0;
         goal11.pose.pose.orientation.z = 3.14;
         goal11.max_linear_speed = 20.0;
         goal11.max_angular_speed = 0.2;
         goal11.move_mode = 10;
         goals_.push_back(goal11);
 
-        Goal goal12;//第二關終點
+        Goal goal12;
         goal12.type = 0;
-        goal12.pose.pose.position.x = -6170.0;
-        goal12.pose.pose.position.y = 930.0;
+        goal12.pose.pose.position.x = -617.0;
+        goal12.pose.pose.position.y = 93.0;
         goal12.pose.pose.orientation.z = 3.14;
         goal12.max_linear_speed = 20.0;
         goal12.max_angular_speed = 0.2;
         goal12.move_mode = 10;
         goals_.push_back(goal12);
 
-        Goal goal13;//第二關終點
+        Goal goal13;
         goal13.type = 0;
-        goal13.pose.pose.position.x = -6170.0;
-        goal13.pose.pose.position.y = 120.0;
+        goal13.pose.pose.position.x = -617.0;
+        goal13.pose.pose.position.y = 12.0;
         goal13.pose.pose.orientation.z = 3.14;
         goal13.max_linear_speed = 20.0;
         goal13.max_angular_speed = 0.2;
         goal13.move_mode = 10;
         goals_.push_back(goal13);
 
-        Goal goal14;//第二關終點
+        Goal goal14;
         goal14.type = 0;
-        goal14.pose.pose.position.x = -4720.0;
-        goal14.pose.pose.position.y = 120.0;
+        goal14.pose.pose.position.x = -472.0;
+        goal14.pose.pose.position.y = 12.0;
         goal14.pose.pose.orientation.z = 3.14;
         goal14.max_linear_speed = 20.0;
         goal14.max_angular_speed = 0.2;
         goal14.move_mode = 10;
         goals_.push_back(goal14);
 
-        Goal goal15;//第二關終點
+        Goal goal15;
         goal15.type = 0;
-        goal15.pose.pose.position.x = -4720.0;
-        goal15.pose.pose.position.y = 20.0;
+        goal15.pose.pose.position.x = -472.0;
+        goal15.pose.pose.position.y = 2.0;
         goal15.pose.pose.orientation.z = 3.14;
         goal15.max_linear_speed = 20.0;
         goal15.max_angular_speed = 0.2;
@@ -211,6 +211,7 @@ private:
             request->goal = goals_.front().pose;
             request->max_linear_speed = goals_.front().max_linear_speed;
             request->max_angular_speed = goals_.front().max_angular_speed;
+            request->move_mode = goals_.front().move_mode;
             auto future = goal_client_->async_send_request(request,std::bind(&MissionFour::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);

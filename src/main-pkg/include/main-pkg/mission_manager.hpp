@@ -14,10 +14,8 @@ class MissionManager : public rclcpp::Node {
 public:
     MissionManager() : Node("mission_manager"), current_mission_(0) {
         // 監聽任務完成狀態
-        mission_status_sub_ = this->create_subscription<std_msgs::msg::Int32>(
-            "/mission_status", 10,
-            std::bind(&MissionManager::mission_status_callback, this, std::placeholders::_1));
-        
+        mission_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_status", 10, std::bind(&MissionManager::mission_status_callback, this, std::placeholders::_1));
+
         // 啟動第一個任務
         start_next_mission();
         
