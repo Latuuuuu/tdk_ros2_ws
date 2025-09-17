@@ -15,6 +15,7 @@ class MissionFour : public rclcpp::Node {
 public:
     MissionFour() : Node("mission_4") {
         // 建立目標點的 client
+        mission_command_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_command", 10, std::bind(&MissionFour::mission_command_callback, this, std::placeholders::_1));
         mission_status_pub_ = this->create_publisher<std_msgs::msg::Int32>("/mission_status", 10);
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
         arm_cmd_pub_ = this->create_publisher<std_msgs::msg::Int32>("/robot/cmd_arm", 10);
@@ -33,159 +34,58 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        Goal goal1;
-        goal1.type = 0;
-        goal1.pose.pose.position.x = -492.0;
-        goal1.pose.pose.position.y = 335.0;
-        goal1.pose.pose.orientation.z = 3.14;
-        goal1.max_linear_speed = 20.0;
-        goal1.max_angular_speed = 0.5;
-        goal1.move_mode = 10;
-        goals_.push_back(goal1);
 
-        Goal goal2;
-        goal2.type = 0;
-        goal2.pose.pose.position.x = -492.0;
-        goal2.pose.pose.position.y = 255.0;
-        goal2.pose.pose.orientation.z = 3.14;
-        goal2.max_linear_speed = 20.0;
-        goal2.max_angular_speed = 0.0;
-        goal2.move_mode = 10;
-        goals_.push_back(goal2);
+        goals_.push_back(create_goal(0, -492.0, 335.0, 3.14, 10, 0, 20.0, 0.5)); 
 
-        Goal goal3;
-        goal3.type = 0;
-        goal3.pose.pose.position.x = -478.0;
-        goal3.pose.pose.position.y = 255.0;
-        goal3.pose.pose.orientation.z = 3.14;
-        goal3.max_linear_speed = 20.0;
-        goal3.max_angular_speed = 0.2;
-        goal3.move_mode = 10;
-        goals_.push_back(goal3);
+        goals_.push_back(create_goal(0, -492.0, 255.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal4;
-        goal4.type = 0;
-        goal4.pose.pose.position.x = -478.0;
-        goal4.pose.pose.position.y = 205.0;
-        goal4.pose.pose.orientation.z = 3.14;
-        goal4.max_linear_speed = 20.0;
-        goal4.max_angular_speed = 0.2;
-        goal4.move_mode = 10;
-        goals_.push_back(goal4);
+        goals_.push_back(create_goal(0, -478.0, 255.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal5;
-        goal5.type = 0;
-        goal5.pose.pose.position.x = -396.0;
-        goal5.pose.pose.position.y = 205.0;
-        goal5.pose.pose.orientation.z = 3.14;
-        goal5.max_linear_speed = 20.0;
-        goal5.max_angular_speed = 0.2;
-        goal5.move_mode = 10;
-        goals_.push_back(goal5);
+        goals_.push_back(create_goal(0, -478.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal6;
-        goal6.type = 0;
-        goal6.pose.pose.position.x = -396.0;
-        goal6.pose.pose.position.y = 182.0;
-        goal6.pose.pose.orientation.z = 3.14;
-        goal6.max_linear_speed = 20.0;
-        goal6.max_angular_speed = 0.2;
-        goal6.move_mode = 10;
-        goals_.push_back(goal6);
+        goals_.push_back(create_goal(0, -396.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal7;
-        goal7.type = 0;
-        goal7.pose.pose.position.x = -315.0;
-        goal7.pose.pose.position.y = 182.0;
-        goal7.pose.pose.orientation.z = 3.14;
-        goal7.max_linear_speed = 20.0;
-        goal7.max_angular_speed = 0.2;
-        goal7.move_mode = 10;
-        goals_.push_back(goal7);
+        goals_.push_back(create_goal(0, -396.0, 182.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal8;
-        goal8.type = 0;
-        goal8.pose.pose.position.x = -315.0;
-        goal8.pose.pose.position.y = 105.0;
-        goal8.pose.pose.orientation.z = 3.14;
-        goal8.max_linear_speed = 20.0;
-        goal8.max_angular_speed = 0.2;
-        goal8.move_mode = 10;
-        goals_.push_back(goal8);
+        goals_.push_back(create_goal(0, -315.0, 182.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // Goal goal9;
-        // goal9.type = 0;
-        // goal9.pose.pose.position.x = -315.0;
-        // goal9.pose.pose.position.y = 105.0;
-        // goal9.pose.pose.orientation.z = 3.14;
-        // goal9.max_linear_speed = 20.0;
-        // goal9.max_angular_speed = 0.2;
-        // goal9.move_mode = 10;
-        // goals_.push_back(goal9);
+        goals_.push_back(create_goal(0, -315.0, 105.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal10;
-        goal10.type = 0;
-        goal10.pose.pose.position.x = -396.0;
-        goal10.pose.pose.position.y = 105.0;
-        goal10.pose.pose.orientation.z = 3.14;
-        goal10.max_linear_speed = 20.0;
-        goal10.max_angular_speed = 0.2;
-        goal10.move_mode = 10;
-        goals_.push_back(goal10);
+        goals_.push_back(create_goal(0, -396.0, 105.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal11;
-        goal11.type = 0;
-        goal11.pose.pose.position.x = -396.0;
-        goal11.pose.pose.position.y = 93.0;
-        goal11.pose.pose.orientation.z = 3.14;
-        goal11.max_linear_speed = 20.0;
-        goal11.max_angular_speed = 0.2;
-        goal11.move_mode = 10;
-        goals_.push_back(goal11);
+        goals_.push_back(create_goal(0, -396.0, 93.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal12;
-        goal12.type = 0;
-        goal12.pose.pose.position.x = -617.0;
-        goal12.pose.pose.position.y = 93.0;
-        goal12.pose.pose.orientation.z = 3.14;
-        goal12.max_linear_speed = 20.0;
-        goal12.max_angular_speed = 0.2;
-        goal12.move_mode = 10;
-        goals_.push_back(goal12);
+        goals_.push_back(create_goal(0, -617.0, 93.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal13;
-        goal13.type = 0;
-        goal13.pose.pose.position.x = -617.0;
-        goal13.pose.pose.position.y = 12.0;
-        goal13.pose.pose.orientation.z = 3.14;
-        goal13.max_linear_speed = 20.0;
-        goal13.max_angular_speed = 0.2;
-        goal13.move_mode = 10;
-        goals_.push_back(goal13);
+        goals_.push_back(create_goal(0, -617.0, 12.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal14;
-        goal14.type = 0;
-        goal14.pose.pose.position.x = -472.0;
-        goal14.pose.pose.position.y = 12.0;
-        goal14.pose.pose.orientation.z = 3.14;
-        goal14.max_linear_speed = 20.0;
-        goal14.max_angular_speed = 0.2;
-        goal14.move_mode = 10;
-        goals_.push_back(goal14);
+        goals_.push_back(create_goal(0, -472.0, 12.0, 3.14, 10, 0, 20.0, 0.5));
 
-        Goal goal15;
-        goal15.type = 0;
-        goal15.pose.pose.position.x = -472.0;
-        goal15.pose.pose.position.y = 2.0;
-        goal15.pose.pose.orientation.z = 3.14;
-        goal15.max_linear_speed = 20.0;
-        goal15.max_angular_speed = 0.2;
-        goal15.move_mode = 10;
-        goals_.push_back(goal15);
+        goals_.push_back(create_goal(0, -472.0, 2.0, 3.14, 10, 0, 20.0, 0.5)); 
+    }
+
+    void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
+        if (msg->data == 4 && !node_started_) { // 假設 4 是啟動 Mission Four 的命令
+            // RCLCPP_INFO(this->get_logger(), "Mission Four command received.");
+            // 重新初始化目標點序列
+            // goals_.clear();
+            // initialize_goals();
+            waiting_for_response_ = false;
+            pending_arm_cmd_ = 0;
+            waiting_for_arm_ = false;
+            node_started_ = true;
+        }
+        else{
+            node_started_ = false;
+        }
     }
 
     void check_and_send_goal() {
         // 如果目前沒有目標，或目標序列已完成，則退出
+        if (!node_started_) {
+            return;
+        }
+
         if (goals_.empty()) {
             RCLCPP_INFO(this->get_logger(), "All goals completed.");
             // rclcpp::shutdown();
@@ -267,6 +167,19 @@ private:
         int move_mode; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 01: trace, 00: not trace
     };
 
+    Goal create_goal(int type,double x, double y, double yaw, int move_mode, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5) {
+        Goal goal;
+        goal.type = type;
+        goal.pose.pose.position.x = x;
+        goal.pose.pose.position.y = y;
+        goal.pose.pose.orientation.z = yaw;
+        goal.max_linear_speed = max_linear_speed;
+        goal.max_angular_speed = max_angular_speed;
+        goal.move_mode = move_mode;
+        goal.arm_cmd = arm_cmd;
+        return goal;
+    }
+
     // 成員變數
     rclcpp::Client<interfaces::srv::GoalPoint>::SharedPtr goal_client_;
     rclcpp::TimerBase::SharedPtr timer_;
@@ -275,6 +188,8 @@ private:
     int pending_arm_cmd_{0};
     bool waiting_for_arm_{false};
     double x_{-81.0}, y_{641.0},z_{3.14}; 
+    bool node_started_{false};
+    rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr mission_command_sub_;
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr arm_cmd_pub_;
     rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr arm_status_sub_;
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr mission_status_pub_;
