@@ -2,5 +2,6 @@ geometry_msgs/PoseStamped goal
 float64 max_linear_speed
 float64 max_angular_speed
 int32 move_mode
+int32 inter_code
 ---
 bool status  

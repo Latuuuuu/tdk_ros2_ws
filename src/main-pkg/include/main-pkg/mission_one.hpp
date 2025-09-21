@@ -11,69 +11,39 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "std_msgs/msg/int32.hpp"
 
-class MissionFour : public rclcpp::Node {
+class MissionOne : public rclcpp::Node {
 public:
-    MissionFour() : Node("mission_4") {
+    MissionOne() : Node("mission_1") {
         // 建立目標點的 client
-        mission_command_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_command", 10, std::bind(&MissionFour::mission_command_callback, this, std::placeholders::_1));
+        mission_command_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_command", 10, std::bind(&MissionOne::mission_command_callback, this, std::placeholders::_1));
         mission_status_pub_ = this->create_publisher<std_msgs::msg::Int32>("/mission_status", 10);
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
-        arm_cmd_pub_ = this->create_publisher<std_msgs::msg::Int32>("/robot/cmd_arm", 10);
-        arm_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/robot/arm_status", 10,std::bind(&MissionFour::arm_status_callback, this, std::placeholders::_1));
-
 
         // 初始化目標點序列
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&MissionFour::check_and_send_goal, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&MissionOne::check_and_send_goal, this));
 
-        RCLCPP_INFO(this->get_logger(), "MissionFour started.");
+        RCLCPP_INFO(this->get_logger(), "MissionOne started.");
     }
 
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        goals_.push_back(create_goal(0, -500.0, 500.0, 0.0, 10, 0, 100.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 140.0, 0.0, 40, 0, 30.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 390.0, 0.0, 41, 0, 25.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 616.0, 0.0, 11, 0, 20.0, 0.5)); 
 
-        // goals_.push_back(create_goal(0, -492.0, 335.0, 3.14, 10, 0, 20.0, 0.5, 6)); 
-
-        // goals_.push_back(create_goal(0, -492.0, 255.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -478.0, 255.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -478.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -396.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -396.0, 182.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -315.0, 182.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -315.0, 105.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -396.0, 105.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -396.0, 93.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -617.0, 93.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -617.0, 12.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -472.0, 12.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -472.0, 2.0, 3.14, 10, 0, 20.0, 0.5)); 
     }
 
     void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
-        if (msg->data == 4 && !node_started_) { // 假設 4 是啟動 Mission Four 的命令
+        if (msg->data == 1 && !node_started_) { // 假設 4 是啟動 Mission Four 的命令
             // RCLCPP_INFO(this->get_logger(), "Mission Four command received.");
             // 重新初始化目標點序列
             // goals_.clear();
             // initialize_goals();
             waiting_for_response_ = false;
-            pending_arm_cmd_ = 0;
-            waiting_for_arm_ = false;
             node_started_ = true;
         }
         if(msg->data == -1 && node_started_){
@@ -93,7 +63,7 @@ private:
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "All goals completed.");
             // rclcpp::shutdown();
             std_msgs::msg::Int32 status;
-            status.data = 4; // Mission Four 的 ID
+            status.data = 1;
             mission_status_pub_->publish(status);
             return;
         }
@@ -115,19 +85,9 @@ private:
             request->max_linear_speed = goals_.front().max_linear_speed;
             request->max_angular_speed = goals_.front().max_angular_speed;
             request->move_mode = goals_.front().move_mode;
-            auto future = goal_client_->async_send_request(request,std::bind(&MissionFour::goal_response_callback, this, std::placeholders::_1));
+            auto future = goal_client_->async_send_request(request,std::bind(&MissionOne::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
-        }
-        else if (goals_.front().type == 3) {
-            // 手臂任務：發布行動代號並等待回覆等於同代號
-            pending_arm_cmd_ = goals_.front().arm_cmd;
-            std_msgs::msg::Int32 cmd;
-            cmd.data = pending_arm_cmd_;
-            arm_cmd_pub_->publish(cmd);
-            waiting_for_response_ = true;
-            waiting_for_arm_ = true;
-            RCLCPP_INFO(this->get_logger(), "Sent arm cmd: %d", pending_arm_cmd_);
         }
     }
 
@@ -143,23 +103,6 @@ private:
         waiting_for_response_ = false;
     }
 
-    void arm_status_callback(const std_msgs::msg::Int32::SharedPtr msg) {
-        if (!waiting_for_arm_) return;
-        if (msg->data == pending_arm_cmd_) {
-            RCLCPP_INFO(this->get_logger(), "Arm done for cmd=%d", pending_arm_cmd_);
-            waiting_for_response_ = false;
-            waiting_for_arm_ = false;
-            pending_arm_cmd_ = -1;
-            // 完成後彈出此手臂目標，進下一個
-            if (!goals_.empty() && goals_.front().type == 3) {
-                goals_.erase(goals_.begin());
-            }
-        } else {
-            // 其他代碼：忽略或打印
-            RCLCPP_DEBUG(this->get_logger(), "Arm status=%d (waiting %d)", msg->data, pending_arm_cmd_);
-        }
-    }
-
     struct Goal {
         int type;   //chassis = 0, camera_menu =1, camera_table =2, arm =3
         geometry_msgs::msg::PoseStamped pose;
@@ -168,10 +111,9 @@ private:
         bool start;
         int arm_cmd ;
         int move_mode; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 01: trace, 00: not trace
-        int inter_code;
     };
 
-    Goal create_goal(int type,double x, double y, double yaw, int move_mode, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5, int inter_code = 0) {
+    Goal create_goal(int type,double x, double y, double yaw, int move_mode, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5) {
         Goal goal;
         goal.type = type;
         goal.pose.pose.position.x = x;
@@ -181,7 +123,6 @@ private:
         goal.max_angular_speed = max_angular_speed;
         goal.move_mode = move_mode;
         goal.arm_cmd = arm_cmd;
-        goal.inter_code = inter_code;
         return goal;
     }
 
@@ -190,11 +131,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     std::vector<Goal> goals_;
     bool waiting_for_response_{false};
-    int pending_arm_cmd_{0};
-    bool waiting_for_arm_{false};
     bool node_started_{false};
     rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr mission_command_sub_;
-    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr arm_cmd_pub_;
-    rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr arm_status_sub_;
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr mission_status_pub_;
 };

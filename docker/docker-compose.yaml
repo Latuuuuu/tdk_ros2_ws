@@ -117,10 +117,10 @@ services:
       - ROS_DOMAIN_ID=0
       - ROS_LOCALHOST_ONLY=0
     devices:
-      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_0668FF545456857187044913-if02:/dev/ttyACM0
+      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066BFF525370874967014655-if02:/dev/ttyACM1
     volumes:
       - /dev:/dev
-    command: serial --dev /dev/ttyACM0 --baudrate 115200 -v4
+    command: serial --dev /dev/ttyACM1 --baudrate 115200 -v4
     group_add:
       - dialout
     restart: unless-stopped
@@ -133,10 +133,10 @@ services:
       - ROS_DOMAIN_ID=0
       - ROS_LOCALHOST_ONLY=0
     devices:
-      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066AFF313656393143013552-if02:/dev/ttyACM1
+      - /dev/serial/by-id/usb-STMicroelectronics_STM32_STLink_066AFF313656393143013552-if02:/dev/ttyACM0
     volumes:
       - /dev:/dev
-    command: serial --dev /dev/ttyACM1 --baudrate 115200 -v4
+    command: serial --dev /dev/ttyACM0 --baudrate 115200 -v4
     group_add:
       - dialout
     restart: unless-stopped

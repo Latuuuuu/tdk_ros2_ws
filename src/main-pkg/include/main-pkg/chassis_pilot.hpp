@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cmath>  
 #include <algorithm>
 #include <chrono>
@@ -22,7 +23,7 @@ public:
         velocity_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/robot/cmd_vel", 10);    
         goal_server_ = this->create_service<interfaces::srv::GoalPoint>("/goal", std::bind(&ChassisPilot::set_goal, this, std::placeholders::_1, std::placeholders::_2));
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(10),std::bind(&ChassisPilot::publish_velocity, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&ChassisPilot::publish_velocity, this));
         
         RCLCPP_INFO(this->get_logger(), "ChassisPilot started.");
     }
@@ -54,6 +55,9 @@ private:
         vy_meas_ = msg->twist.twist.linear.y;
         wz_meas_ = msg->twist.twist.angular.z;
 
+        if(msg->twist.twist.angular.x != 0)trace_reached_ = true;
+        else trace_reached_ = false;
+        
         linear_velocity_now_ = std::hypot(vx_meas_, vy_meas_);
         angular_velocity_now_ = std::abs(wz_meas_);
 
@@ -71,6 +75,7 @@ private:
         max_linear_speed_ = request->max_linear_speed;
         max_angular_speed_ = request->max_angular_speed;
         move_mode_ = request->move_mode;
+        inter_code_ = request->inter_code;
 
         update_dist();
 
@@ -102,30 +107,26 @@ private:
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Goal reached. Stopping.");
             return;
         }
-        if (move_mode_/ 10 == 1) {
+        if (move_mode_/ 10 == 1 || move_mode_ / 10 ==4) {
             const double global_direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
 
             const double relative_direction = ang_norm(global_direction - yaw_);
 
-            const double v_target_mag = braking_speed(dist_to_goal,linear_acceleration_);
-            // const double v_target_mag = max_linear_speed_;
+            double v_target_mag = max_linear_speed_;
+            if(move_mode_/ 10 == 1)v_target_mag= braking_speed(dist_to_goal,linear_acceleration_);
             double v_new_mag = v_target_mag;
             if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
             if(v_new_mag < min_linear_speed_) v_new_mag = min_linear_speed_;
             if(v_new_mag > max_linear_speed_) v_new_mag = max_linear_speed_;
             v_new_mag = std::clamp(v_new_mag, min_linear_speed_, max_linear_speed_);
-            // RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
-            // "Debug: dist=%.2f,v_new=%.2f, current=%.2f, target=%.2f, step=%.2f, after_ramp=%.2f, min_speed=%.2f, max_speed=%.2f", 
-            // dist_to_goal, v_new_mag, linear_velocity_now_, v_target_mag, linear_acceleration_, 
-            // ramp_towards(linear_velocity_now_, v_target_mag, linear_acceleration_),
-            // min_linear_speed_, max_linear_speed_);
-            // double global_vx = v_new_mag * std::cos(direction);
-            // double global_vy = v_new_mag * std::sin(direction);
-            // msg.linear.x = global_vx * std::cos(yaw_) + global_vy * std::sin(yaw_);
-            // msg.linear.y = -global_vx * std::sin(yaw_) + global_vy * std::cos(yaw_);
             msg.linear.x = v_new_mag * std::cos(relative_direction);
             msg.linear.y = v_new_mag * std::sin(relative_direction);
             msg.angular.z = 0.0;
+            if(move_mode_ % 10 == 1){
+                msg.linear.z = 1.0;
+            }else{
+                msg.linear.z = 0.0;
+            }
         }
         else if(move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
             
@@ -140,28 +141,28 @@ private:
             msg.linear.y = 0.0;
             if(move_mode_ / 10 == 2) msg.angular.z = -w_new_mag; //clockwise
             else                     msg.angular.z = w_new_mag; //counterclockwise
-            // RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,"rotating to yaw=%.2f (diff=%.2f),new_w=%.2f,braking=%.2f", goal_yaw_, yaw_to_goal, msg.angular.z, w_target_mag);
+            if(move_mode_ % 10 == 1){
+                msg.linear.z = 2.0;
+            }else{
+                msg.linear.z = 0.0;
+            }
         }else{
             msg.linear.x = 0.0;
             msg.linear.y = 0.0;
             msg.linear.z = 0.0;
             msg.angular.z = 0.0;
         }
-        if(move_mode_ % 10 == 1){
-            msg.linear.z = 1.0;
-        }else{
-            msg.linear.z = 0.0;
-        }
+        
         velocity_publisher_->publish(msg);
     }
 
-    bool complete_goal() {
-        // if(!have_goal_) return false;
-
-        if (move_mode_/ 10 == 1) {
-            return translation_complete();
-        }else if (move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
-            return rotation_complete();
+    bool complete_goal() { 
+        if(trace_reached_){
+            if (move_mode_ / 10 == 1 || move_mode_ / 10 == 4) {
+                return translation_complete();
+            }else if (move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
+                return rotation_complete();
+            }
         }
         return (translation_complete() && rotation_complete());
     }
@@ -207,15 +208,17 @@ private:
     //goal
     double goal_x_ {0.0},goal_y_ {0.0},goal_yaw_ {0.0};
     bool have_goal_ {false};
+    bool trace_reached_{true};
     //parameter
     double pos_tol_ {2}, yaw_tol_ {0.1};
     int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
-    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {1.5}, angular_acceleration_ {0.15},min_linear_speed_ {5.0},min_angular_speed_ {0.1};//cm/s
+    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {3.0}, angular_acceleration_ {0.1},min_linear_speed_ {1.5},min_angular_speed_ {0.1};//cm/s
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
     double control_dt_ {0.05};   
-    int move_mode_ {10}; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 01: trace, 00: not trace
+    int move_mode_ {10}; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 40: no slowdown, 01: trace, 00: not trace
+    int inter_code_ {0};
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr     velocity_publisher_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr    position_subscriber_;

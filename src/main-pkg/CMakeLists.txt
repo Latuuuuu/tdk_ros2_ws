@@ -25,6 +25,10 @@ add_executable(ChassisPilot src/chassis_pilot.cpp)
 ament_target_dependencies(ChassisPilot rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(ChassisPilot PRIVATE include)
 
+add_executable(MissionOne src/mission_one.cpp)
+ament_target_dependencies(MissionOne rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
+target_include_directories(MissionOne PRIVATE include)
+
 add_executable(MissionTwo src/mission_two.cpp)
 ament_target_dependencies(MissionTwo rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(MissionTwo PRIVATE include)
@@ -45,6 +49,7 @@ ament_target_dependencies(SimLower rclcpp geometry_msgs nav_msgs)
 install(TARGETS
   SimLower
   ChassisPilot
+  MissionOne
   MissionTwo
   MissionFour
   MissionManager
