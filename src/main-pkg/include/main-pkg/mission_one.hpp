@@ -23,7 +23,7 @@ public:
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&MissionOne::check_and_send_goal, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(100),std::bind(&MissionOne::check_and_send_goal, this));
 
         RCLCPP_INFO(this->get_logger(), "MissionOne started.");
     }
@@ -31,9 +31,9 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        goals_.push_back(create_goal(0, 0.0, 140.0, 0.0, 40, 0, 30.0, 0.5)); 
-        goals_.push_back(create_goal(0, 0.0, 390.0, 0.0, 41, 0, 25.0, 0.5)); 
-        goals_.push_back(create_goal(0, 0.0, 616.0, 0.0, 11, 0, 20.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 140.0, 0.0, 41, 0, 30.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 390.0, 0.0, 41, 0, 30.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 616.0, 0.0, 11, 0, 25.0, 0.5)); 
 
     }
 

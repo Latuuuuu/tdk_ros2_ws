@@ -76,6 +76,9 @@ private:
         max_angular_speed_ = request->max_angular_speed;
         move_mode_ = request->move_mode;
         inter_code_ = request->inter_code;
+        double exp = max_linear_speed_ * max_linear_speed_ * 0.005 - 1;   
+        pos_tol_ = pow(2, exp);
+        // pos_tol_ = max_linear_speed_ * max_linear_speed_ * 0.005;
 
         update_dist();
 
@@ -83,7 +86,7 @@ private:
         response->status = done;        
         have_goal_ = !done;
 
-        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), static_cast<uint64_t>(log_throttle_ms_), "Goal Set: x=%.2f, y=%.2f, yaw=%.2f, move mode=%d", goal_x_, goal_y_, goal_yaw_, move_mode_);   
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Goal Set: x=%.2f, y=%.2f, yaw=%.2f, move mode=%d", goal_x_, goal_y_, goal_yaw_, move_mode_);   
     }
 
     void publish_velocity() {
@@ -99,21 +102,23 @@ private:
         geometry_msgs::msg::Twist msg;
 
         if (complete_goal()) {
-            reset_twist(msg);
-            velocity_publisher_->publish(msg);
+            if(move_mode_ / 10 != 4.0){
+                reset_twist(msg);
+                velocity_publisher_->publish(msg);
+            }
             auto response = std::make_shared<interfaces::srv::GoalPoint::Response>();
             response->status = true;
             have_goal_ = false;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Goal reached. Stopping.");
             return;
         }
-        if (move_mode_/ 10 == 1 || move_mode_ / 10 ==4) {
+        if (move_mode_ / 10 == 1) {
             const double global_direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
 
             const double relative_direction = ang_norm(global_direction - yaw_);
 
             double v_target_mag = max_linear_speed_;
-            if(move_mode_/ 10 == 1)v_target_mag= braking_speed(dist_to_goal,linear_acceleration_);
+            v_target_mag= braking_speed(dist_to_goal,linear_acceleration_);
             double v_new_mag = v_target_mag;
             if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
             if(v_new_mag < min_linear_speed_) v_new_mag = min_linear_speed_;
@@ -122,13 +127,35 @@ private:
             msg.linear.x = v_new_mag * std::cos(relative_direction);
             msg.linear.y = v_new_mag * std::sin(relative_direction);
             msg.angular.z = 0.0;
+
             if(move_mode_ % 10 == 1){
                 msg.linear.z = 1.0;
             }else{
                 msg.linear.z = 0.0;
             }
-        }
-        else if(move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Translating: dist=%.2f tol=%.2f, dir=%.2f, v_target=%.2f, v_new=%.2f", dist_to_goal, pos_tol_, relative_direction, v_target_mag, v_new_mag);
+        }else if (move_mode_ / 10 == 4) {
+            const double global_direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
+
+            const double relative_direction = ang_norm(global_direction - yaw_);
+
+            double v_target_mag = max_linear_speed_;
+            double v_new_mag = v_target_mag;
+            if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
+            if(v_new_mag < min_linear_speed_) v_new_mag = min_linear_speed_;
+            if(v_new_mag > max_linear_speed_) v_new_mag = max_linear_speed_;
+            v_new_mag = std::clamp(v_new_mag, min_linear_speed_, max_linear_speed_);
+            msg.linear.x = v_new_mag * std::cos(relative_direction);
+            msg.linear.y = v_new_mag * std::sin(relative_direction);
+            msg.angular.z = 0.0;
+            
+            if(move_mode_ % 10 == 1){
+                msg.linear.z = 1.0;
+            }else{
+                msg.linear.z = 0.0;
+            }
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Translating: dist=%.2f tol=%.2f, dir=%.2f, v_target=%.2f, v_new=%.2f", dist_to_goal, pos_tol_, relative_direction, v_target_mag, v_new_mag);
+        }else if(move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
             
             const double w_target_mag = braking_speed(yaw_to_goal,angular_acceleration_);
             double w_new_mag = w_target_mag;
@@ -157,8 +184,11 @@ private:
     }
 
     bool complete_goal() { 
+        if (move_mode_ / 10 == 4) {
+            return translation_complete();
+        }
         if(trace_reached_){
-            if (move_mode_ / 10 == 1 || move_mode_ / 10 == 4) {
+            if (move_mode_ / 10 == 1) {
                 return translation_complete();
             }else if (move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
                 return rotation_complete();
@@ -210,11 +240,11 @@ private:
     bool have_goal_ {false};
     bool trace_reached_{true};
     //parameter
-    double pos_tol_ {2}, yaw_tol_ {0.1};
+    double pos_tol_ {12}, yaw_tol_ {0.1};
     int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
-    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {3.0}, angular_acceleration_ {0.1},min_linear_speed_ {1.5},min_angular_speed_ {0.1};//cm/s
+    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {1.5}, angular_acceleration_ {0.1},min_linear_speed_ {5.0},min_angular_speed_ {0.1};//cm/s
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
     double control_dt_ {0.05};   
     int move_mode_ {10}; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 40: no slowdown, 01: trace, 00: not trace

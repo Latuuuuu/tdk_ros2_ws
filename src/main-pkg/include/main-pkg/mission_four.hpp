@@ -38,31 +38,20 @@ private:
 
         // goals_.push_back(create_goal(0, -492.0, 335.0, 3.14, 10, 0, 20.0, 0.5, 6)); 
 
-        // goals_.push_back(create_goal(0, -492.0, 255.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -487.0, 260.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -478.0, 255.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -462.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -478.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -262.0, 185.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -396.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -262.0, 115.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -396.0, 182.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -602.0, 90.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -315.0, 182.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -602.0, 10.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -315.0, 105.0, 3.14, 10, 0, 20.0, 0.5));
+        // goals_.push_back(create_goal(0, -447.0, 0.0, 3.14, 10, 0, 20.0, 0.5));
 
-        // goals_.push_back(create_goal(0, -396.0, 105.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -396.0, 93.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -617.0, 93.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -617.0, 12.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -472.0, 12.0, 3.14, 10, 0, 20.0, 0.5));
-
-        // goals_.push_back(create_goal(0, -472.0, 2.0, 3.14, 10, 0, 20.0, 0.5)); 
     }
 
     void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {

@@ -41,12 +41,12 @@ private:
 
         // goals_.push_back(create_goal(0, 0.0, 700.0, 0.0, 11, 0, 0, 100.0, 0.5)); //test
 
-        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 10, 0, 0, 15.0, 0.3, 2)); //第一關終點
-        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 20, 0, 0, 20.0, 0.3));
+        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 11, 0, 0, 20.0, 0.3, 2)); //第一關終點
+        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 21, 0, 0, 20.0, 0.3));
         // goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 10, 0, 0, 10.0, 0.5));
 
-        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 10, 0, 0, 20.0, 0.3, 1)); //第二關起點
-        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 20, 0, 0, 20.0, 0.3));
+        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 11, 0, 0, 20.0, 0.3, 1)); //第二關起點
+        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 21, 0, 0, 20.0, 0.3));
         // goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 10, 0, 0, 20.0, 0.5));
 
 
@@ -61,8 +61,8 @@ private:
 
 
         goals_.push_back(create_goal(0, 83.0, 660.0, 3.14, 10, 0, 0, 20.0, 0.3)); //回到主桌前
-        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 10, 0, 0, 20.0, 0.3, 1));
-        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 20, 0, 0, 20.0, 0.3));
+        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 11, 0, 0, 20.0, 0.3, 1));
+        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 21, 0, 0, 20.0, 0.3));
 
         goals_.push_back(create_goal(3, 83.0, 616.0, 1.57, 11, 0, 3)); //手臂放鏡頭
 
@@ -70,8 +70,8 @@ private:
 
         goals_.push_back(create_goal(3, 83.0, 616.0, 1.57, 11, 0, 4)); //手臂放杯子
 
-        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 10, 0, 0, 20.0, 0.3, 5)); //第二關終點
-        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 20, 0, 0, 20.0, 0.3));
+        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 11, 0, 0, 20.0, 0.3, 5)); //第二關終點
+        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 21, 0, 0, 20.0, 0.3));
     }
 
     void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
