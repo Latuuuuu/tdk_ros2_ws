@@ -78,7 +78,8 @@ private:
         inter_code_ = request->inter_code;
         double exp = max_linear_speed_ * max_linear_speed_ * 0.005 - 1;   
         pos_tol_ = pow(2, exp);
-        // pos_tol_ = max_linear_speed_ * max_linear_speed_ * 0.005;
+        if(move_mode_ % 10 == 1) {min_linear_speed_ = 5.0;min_angular_speed_ = 0.2;}
+        else{min_linear_speed_ = 0.0;min_angular_speed_ = 0.0;}
 
         update_dist();
 
@@ -229,6 +230,10 @@ private:
     void update_dist(){
         dist_to_goal = std::hypot(goal_x_ - x_, goal_y_ - y_);
         yaw_to_goal = ang_norm(goal_yaw_ - yaw_);
+        if(move_mode_ % 10 == 1) {
+            dist_buffer_ = std::max(dist_buffer_, dist_to_goal);
+            yaw_buffer_ = std::max(yaw_buffer_, std::abs(yaw_to_goal));
+        }
     }
 
     //status
@@ -244,7 +249,7 @@ private:
     int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
     double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
-    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {1.5}, angular_acceleration_ {0.1},min_linear_speed_ {5.0},min_angular_speed_ {0.1};//cm/s
+    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {1.5}, angular_acceleration_ {0.1},min_linear_speed_ {3.0},min_angular_speed_ {0.1};//cm/s
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
     double control_dt_ {0.05};   
     int move_mode_ {10}; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 40: no slowdown, 01: trace, 00: not trace
