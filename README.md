@@ -7,7 +7,7 @@ compose container
 docker compose up -d //後面可以接container name指定開啟
 ```
 右鍵想要的containerAttach Shell可以開啟container環境的terminal
-![image](https://hackmd.io/_uploads/BJ1mvDb3lg.png =50%x)
+![image](https://hackmd.io/_uploads/BJ1mvDb3lg.png)
 ### 關閉docker
 ```javascript=
 docker compose down //後面可以接container name指定關閉
