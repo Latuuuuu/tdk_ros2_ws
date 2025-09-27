@@ -29,7 +29,7 @@ public:
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&MissionTwo::check_and_send_goal, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(20),std::bind(&MissionTwo::check_and_send_goal, this));
 
         RCLCPP_INFO(this->get_logger(), "MissionTwo started.");
     }
@@ -39,30 +39,27 @@ private:
         // 初始化目標點序列
         //int type,double x, double y, double yaw, int move_mode, bool start, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5
 
-        // goals_.push_back(create_goal(0, 0.0, 700.0, 0.0, 11, 0, 0, 100.0, 0.5)); //test
+        // goals_.push_back(create_goal(0, 0.0, 700.0, 0.0, 10, 0, 0, 20.0, 0.5)); //test
 
-        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 11, 0, 0, 20.0, 0.3, 2)); //第一關終點
-        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 21, 0, 0, 20.0, 0.3));
-        // goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 10, 0, 0, 10.0, 0.5));
+        // goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 11, 0, 0, 30.0, 0.5, 2)); //第一關終點
+        // goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 20, 0, 0, 30.0, 0.5));
 
-        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 11, 0, 0, 20.0, 0.3, 1)); //第二關起點
-        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 21, 0, 0, 20.0, 0.3));
-        // goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 10, 0, 0, 20.0, 0.5));
+        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 10, 0, 0, 30.0, 0.5, 1)); //第二關起點
+        goals_.push_back(create_goal(0, 83.0, 616.0, 3.14, 20, 0, 0, 30.0, 0.5));
 
+        goals_.push_back(create_goal(0, 85.0, 660.0, 3.14, 10, 0, 0, 30.0, 0.5)); //去主桌前
 
-        goals_.push_back(create_goal(0, 85.0, 660.0, 3.14, 10, 0, 0, 20.0, 0.3)); //去主桌前
-        // goals_.push_back(create_goal(0, 85.0, 666.0, 3.14, 21, 0, 0, 20.0, 0.5));
+        goals_.push_back(create_goal(3, 85.0, 660.0, 3.14, 10, 0, 1)); //手臂抬鏡頭
 
-        goals_.push_back(create_goal(3, 85.0, 660.0, 3.14, 11, 0, 1)); //手臂抬鏡頭
+        goals_.push_back(create_goal(1, 85.0, 660.0, 3.14, 10, 1, 0)); //菜單辨識
 
-        goals_.push_back(create_goal(1, 85.0, 660.0, 3.14, 11, 1, 0)); //菜單辨識
-
-        goals_.push_back(create_goal(3, 85.0, 660.0, 3.14, 11, 0, 2)); //手臂夾杯子
+        goals_.push_back(create_goal(3, 85.0, 660.0, 3.14, 10, 0, 2)); //手臂夾杯子
 
 
-        goals_.push_back(create_goal(0, 83.0, 660.0, 3.14, 10, 0, 0, 20.0, 0.3)); //回到主桌前
-        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 11, 0, 0, 20.0, 0.3, 1));
-        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 21, 0, 0, 20.0, 0.3));
+        goals_.push_back(create_goal(0, 83.0, 660.0, 3.14, 10, 0, 0, 30.0, 0.5)); //回到主桌前
+
+        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 11, 0, 0, 30.0, 0.5, 1));
+        goals_.push_back(create_goal(0, 83.0, 616.0, 1.57, 20, 0, 0, 30.0, 0.5));
 
         goals_.push_back(create_goal(3, 83.0, 616.0, 1.57, 11, 0, 3)); //手臂放鏡頭
 
@@ -70,8 +67,8 @@ private:
 
         goals_.push_back(create_goal(3, 83.0, 616.0, 1.57, 11, 0, 4)); //手臂放杯子
 
-        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 11, 0, 0, 20.0, 0.3, 5)); //第二關終點
-        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 21, 0, 0, 20.0, 0.3));
+        goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 11, 0, 0, 30.0, 0.5, 5)); //第二關終點
+        // goals_.push_back(create_goal(0, -267.0, 616.0, 1.57, 21, 0, 0, 20.0, 0.5));
     }
 
     void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
@@ -81,7 +78,7 @@ private:
             waiting_for_arm_ = false;
             node_started_ = true;
         }
-        if(msg->data == -1 && node_started_){
+        if((msg->data == -1 || msg->data == 3) && node_started_){
             node_started_ = false;
             goals_.clear();
             initialize_goals();
@@ -120,6 +117,7 @@ private:
             request->max_linear_speed = goals_.front().max_linear_speed;
             request->max_angular_speed = goals_.front().max_angular_speed;
             request->move_mode = goals_.front().move_mode;
+            request->inter_code = goals_.front().inter_code;
             waiting_for_response_ = true;
             auto future = goal_client_->async_send_request(request,std::bind(&MissionTwo::goal_response_callback, this, std::placeholders::_1));
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000,"Sent goal: x=%.2f, y=%.2f, move mode:%d", request->goal.pose.position.x, request->goal.pose.position.y, request->move_mode);
@@ -213,24 +211,35 @@ private:
             y_ = 641.0;
             z_ = 3.14;
         }
-        goals_.insert(goals_.begin()+4,create_goal(0, x2, y2, z2, 10, 0, 0, 20.0, 0.3));
-        if(num_ == 1)goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 30, 0, 0, 20.0, 0.3, 4));
-        else if (num_== 2)goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 20, 0, 0, 20.0, 0.3, 4));
-        else if (num_== 3)goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 20, 0, 0, 20.0, 0.3, 3));
-        else goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 30, 0, 0, 20.0, 0.3, 3));
-        goals_.insert(goals_.begin()+6,create_goal(0, x3, y3, z3, 10, 0, 0, 20.0, 0.3));
-        goals_.insert(goals_.begin()+10,create_goal(0, x3, y3, z3, 10, 0, 0, 20.0, 0.3));
-        goals_.insert(goals_.begin()+11,create_goal(0, x3, y3, z3, 10, 0, 0, 20.0, 0.3));
-        goals_.insert(goals_.begin()+11,create_goal(0, x2, y2, 1.57, 10, 0, 0, 20.0, 0.3));//去餐桌中點
-        if(num_ == 1)goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.57, 30, 0, 0, 20.0, 0.3, 4));
-        else if (num_== 2)goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.57, 20, 0, 0, 20.0, 0.3, 4));
-        else if (num_== 3)goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.57, 20, 0, 0, 20.0, 0.3, 3));
-        else goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.57, 30, 0, 0, 20.0, 0.3, 3));
+        if(num_ == 1 || num_ == 2)goals_.insert(goals_.begin()+4,create_goal(0, x2, y2, z2, 11, 0, 0, 30.0, 0.5, 4));
+        else goals_.insert(goals_.begin()+4,create_goal(0, x2, y2, z2, 11, 0, 0, 30.0, 0.5, 3));
+
+        if(num_ == 1)goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 30, 0, 0, 30.0, 0.5, 4));
+        else if (num_== 2)goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 20, 0, 0, 30.0, 0.5, 4));
+        else if (num_== 3)goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 20, 0, 0, 30.0, 0.5, 3));
+        else goals_.insert(goals_.begin()+5,create_goal(0, x2, y2, z2, 30, 0, 0, 30.0, 0.5, 3));
+
+        goals_.insert(goals_.begin()+6,create_goal(0, x3, y3, z3, 10, 0, 0, 30.0, 0.5));
+        goals_.insert(goals_.begin()+10,create_goal(0, x3, y3, z3, 10, 0, 0, 30.0, 0.5));
+
+        if(num_ == 1 || num_ == 2)goals_.insert(goals_.begin()+11,create_goal(0, x2, y2, 1.57, 10, 0, 0, 30.0, 0.5, 4));//去餐桌中點
+        else goals_.insert(goals_.begin()+11,create_goal(0, x2, y2, 1.57, 10, 0, 0, 30.0, 0.5, 3));
+
+        if(num_ == 1)goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.57, 20, 0, 0, 30.0, 0.5, 4));
+        else if (num_== 2)goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.50, 30, 0, 0, 30.0, 0.5, 4));
+        else if (num_== 3)goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.50, 30, 0, 0, 30.0, 0.5, 3));
+        else goals_.insert(goals_.begin()+12,create_goal(0, x2, y2, 1.57, 30, 0, 0, 30.0, 0.5, 3));
 
         Goal goal;//夾杯子的位置
         goal.type = 0;
-        if (color_id_)goals_.insert(goals_.begin(), create_goal(0, 63.0, 660.0, 3.14, 10, 0, 0, 20.0, 0.3));
-        else goals_.insert(goals_.begin(), create_goal(0, 103.0, 660.0, 3.14, 10, 0, 0, 20.0, 0.3));
+        if (color_id_){
+            goals_.insert(goals_.begin(), create_goal(0, 68.0, 660.0, 3.14, 10, 0, 0, 30.0, 0.5));
+            goals_.insert(goals_.begin()+1, create_goal(0, 68.0, 658.0, 3.14, 10, 0, 0, 30.0, 0.5));
+        }
+        else {
+            goals_.insert(goals_.begin(), create_goal(0, 96.0, 660.0, 3.14, 10, 0, 0, 30.0, 0.5));
+            goals_.insert(goals_.begin()+1, create_goal(0, 96.0, 658.0, 3.14, 10, 0, 0, 30.0, 0.5));
+        }
     }
 
     void table_response_callback(rclcpp::Client<interfaces::srv::KeyVisual>::SharedFuture future) {
@@ -248,8 +257,8 @@ private:
         goals_.erase(goals_.begin());
         Goal goal;//夾取點
         goal.type = 0;
-        if(y_ > 620)goals_.insert(goals_.begin(), create_goal(0, x_ + dx - 3.0, y_ + (dy / 2.0), z_, 10, 0, 0, 20.0, 0.3));
-        else goals_.insert(goals_.begin(), create_goal(0, x_ + dx + 3.0, y_ + (dy / 2.0), z_, 10, 0, 0, 20.0, 0.3));
+        if(y_ > 620)goals_.insert(goals_.begin(), create_goal(0, x_ + dx - 3.0, y_ + (dy / 2.0), z_, 10, 0, 0, 30.0, 0.5));
+        else goals_.insert(goals_.begin(), create_goal(0, x_ - dx + 3.0, y_ - (dy / 2.0), z_, 10, 0, 0, 30.0, 0.5));
     }
     void arm_status_callback(const std_msgs::msg::Int32::SharedPtr msg) {
         if (!waiting_for_arm_) return;
@@ -278,7 +287,7 @@ private:
         int inter_code;
     };
 
-    Goal create_goal(int type,double x, double y, double yaw, int move_mode, bool start, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5, int inter_code=0) {
+    Goal create_goal(int type,double x, double y, double yaw, int move_mode, bool start, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5, int inter_code = 0) {
         Goal goal;
         goal.type = type;
         goal.pose.pose.position.x = x;

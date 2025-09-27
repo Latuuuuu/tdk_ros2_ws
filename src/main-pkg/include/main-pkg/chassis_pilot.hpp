@@ -10,6 +10,7 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "nav_msgs/msg/odometry.hpp" 
+#include "std_msgs/msg/int32.hpp"
 #include "interfaces/srv/goal_point.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -19,43 +20,46 @@ using namespace std::chrono_literals;
 class ChassisPilot : public rclcpp::Node {
 public:
     ChassisPilot() : Node("chassis_pilot") {
+        mission_command_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_command", 10, std::bind(&ChassisPilot::mission_command_callback, this, std::placeholders::_1));
         position_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/robot/pose", 10, std::bind(&ChassisPilot::position_callback, this, std::placeholders::_1));
         velocity_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/robot/cmd_vel", 10);    
         goal_server_ = this->create_service<interfaces::srv::GoalPoint>("/goal", std::bind(&ChassisPilot::set_goal, this, std::placeholders::_1, std::placeholders::_2));
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&ChassisPilot::publish_velocity, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(20),std::bind(&ChassisPilot::publish_velocity, this));
         
         RCLCPP_INFO(this->get_logger(), "ChassisPilot started.");
     }
 
 private:
-    static inline double signum(double x){ return (x>0) - (x<0); }
-
-    static inline double ramp_towards(double current, double target, double step){
-        if (current < target) return std::min(current + step, target);
-        else                  return std::max(current - step, target);
+    void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
+        if(msg->data == -1){
+            have_state_ = false;
+        }
     }
 
     // 依剩餘距離 d 與加速度 a 給出「為了能煞得住」的上限速度：v = sqrt(2 a d)
-    static inline double braking_speed(double d, double a/*, double v_max, double v_min = 0.0*/){
+    static inline double braking_speed(double d, double a){
         if (d <= 0.0) d=-d;
         if (a <= 0.0) return 0.0;
         double v = std::sqrt(2.0 * a * d);
-        // v = std::clamp(v, v_min, v_max);
         return v;
     }
 
     void position_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
         x_ = msg->pose.pose.position.x;
         y_ = msg->pose.pose.position.y;
-        // yaw_ = quat_to_yaw(msg->pose.pose.orientation);
         yaw_ = ang_norm(msg->pose.pose.orientation.z); 
 
         vx_meas_ = msg->twist.twist.linear.x;
         vy_meas_ = msg->twist.twist.linear.y;
         wz_meas_ = msg->twist.twist.angular.z;
 
-        if(msg->twist.twist.angular.x != 0)trace_reached_ = true;
+        if(vx_meas_ > 5.0) oscillation[0] = true;
+        else if (vx_meas_ < -5.0) oscillation[1] = true;
+        if(vy_meas_ > 5.0) oscillation[2] = true;
+        else if (vy_meas_ < -5.0) oscillation[3] = true;
+
+        if(msg->pose.pose.orientation.x > 0.5)trace_reached_ = true;
         else trace_reached_ = false;
         
         linear_velocity_now_ = std::hypot(vx_meas_, vy_meas_);
@@ -63,38 +67,49 @@ private:
 
         have_state_ = true;
 
-        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(),static_cast<uint64_t>(log_throttle_ms_),"State x=%.3f y=%.3f yaw=%.3f | v=%.2f w=%.2f",x_, y_, yaw_, linear_velocity_now_, angular_velocity_now_);
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(),1000,"State x=%.3f y=%.3f yaw=%.3f | v=%.2f w=%.2f",x_, y_, yaw_, linear_velocity_now_, angular_velocity_now_);
     }
     
     void set_goal(const std::shared_ptr<interfaces::srv::GoalPoint::Request> request,const std::shared_ptr<interfaces::srv::GoalPoint::Response> response){
         goal_x_ = request->goal.pose.position.x;
         goal_y_ = request->goal.pose.position.y;
-        // goal_yaw_ = quat_to_yaw(request->goal.pose.orientation);
         goal_yaw_ = ang_norm(request->goal.pose.orientation.z); 
 
         max_linear_speed_ = request->max_linear_speed;
         max_angular_speed_ = request->max_angular_speed;
         move_mode_ = request->move_mode;
+
+        if((oscillation[0] && oscillation[1]) || (oscillation[2] && oscillation[3])){
+            move_mode_ = 10;
+        }
+
         inter_code_ = request->inter_code;
-        double exp = max_linear_speed_ * max_linear_speed_ * 0.005 - 1;   
+        double exp = max_linear_speed_ * max_linear_speed_ * 0.0025 - 1;   
         pos_tol_ = pow(2, exp);
-        if(move_mode_ % 10 == 1) {min_linear_speed_ = 5.0;min_angular_speed_ = 0.2;}
-        else{min_linear_speed_ = 0.0;min_angular_speed_ = 0.0;}
+        if(move_mode_ % 10 == 1) {
+            min_linear_speed_ = 10.0; 
+            min_angular_speed_ = 0.1;
+            linear_acceleration_ = 4.0;
+        } else {
+            min_linear_speed_ = 3.0;
+            min_angular_speed_ = 0.1;
+            linear_acceleration_ = 2.0;
+        }
 
         update_dist();
 
         const bool done = complete_goal();
         response->status = done;        
-        have_goal_ = !done;
 
-        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Goal Set: x=%.2f, y=%.2f, yaw=%.2f, move mode=%d", goal_x_, goal_y_, goal_yaw_, move_mode_);   
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Goal Set: x=%.2f, y=%.2f, yaw=%.2f, move mode=%d, inter_code=%d", goal_x_, goal_y_, goal_yaw_, move_mode_,inter_code_);   
     }
 
     void publish_velocity() {
-        if (!have_state_ || !have_goal_) {
+        if (!have_state_) {
             geometry_msgs::msg::Twist zero;
             reset_twist(zero);
             velocity_publisher_->publish(zero);
+            RCLCPP_INFO(this->get_logger(), "ChassisPilot reset up.");
             return;
         }
 
@@ -106,20 +121,24 @@ private:
             if(move_mode_ / 10 != 4.0){
                 reset_twist(msg);
                 velocity_publisher_->publish(msg);
+                RCLCPP_INFO(this->get_logger(), "ChassisPilot reset mid.");
             }
+            oscillation[0] = false;
+            oscillation[1] = false;
+            oscillation[2] = false;
+            oscillation[3] = false;
             auto response = std::make_shared<interfaces::srv::GoalPoint::Response>();
             response->status = true;
-            have_goal_ = false;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Goal reached. Stopping.");
             return;
         }
-        if (move_mode_ / 10 == 1) {
+        if (move_mode_ / 10 == 1 || move_mode_ / 10 == 4) {
             const double global_direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
 
             const double relative_direction = ang_norm(global_direction - yaw_);
 
             double v_target_mag = max_linear_speed_;
-            v_target_mag= braking_speed(dist_to_goal,linear_acceleration_);
+            if(move_mode_ / 10 == 1) v_target_mag= braking_speed(dist_to_goal,linear_acceleration_);
             double v_new_mag = v_target_mag;
             if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
             if(v_new_mag < min_linear_speed_) v_new_mag = min_linear_speed_;
@@ -131,31 +150,11 @@ private:
 
             if(move_mode_ % 10 == 1){
                 msg.linear.z = 1.0;
+                msg.angular.y = (float)inter_code_;
             }else{
                 msg.linear.z = 0.0;
             }
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Translating: dist=%.2f tol=%.2f, dir=%.2f, v_target=%.2f, v_new=%.2f", dist_to_goal, pos_tol_, relative_direction, v_target_mag, v_new_mag);
-        }else if (move_mode_ / 10 == 4) {
-            const double global_direction = std::atan2(goal_y_ - y_, goal_x_ - x_);
-
-            const double relative_direction = ang_norm(global_direction - yaw_);
-
-            double v_target_mag = max_linear_speed_;
-            double v_new_mag = v_target_mag;
-            if(linear_velocity_now_ < v_new_mag) v_new_mag = std::min(linear_velocity_now_ + linear_acceleration_, v_target_mag);
-            if(v_new_mag < min_linear_speed_) v_new_mag = min_linear_speed_;
-            if(v_new_mag > max_linear_speed_) v_new_mag = max_linear_speed_;
-            v_new_mag = std::clamp(v_new_mag, min_linear_speed_, max_linear_speed_);
-            msg.linear.x = v_new_mag * std::cos(relative_direction);
-            msg.linear.y = v_new_mag * std::sin(relative_direction);
-            msg.angular.z = 0.0;
-            
-            if(move_mode_ % 10 == 1){
-                msg.linear.z = 1.0;
-            }else{
-                msg.linear.z = 0.0;
-            }
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Translating: dist=%.2f tol=%.2f, dir=%.2f, v_target=%.2f, v_new=%.2f", dist_to_goal, pos_tol_, relative_direction, v_target_mag, v_new_mag);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Translating: dist=%.2f tol=%.2f, dir=%.2f, v_target=%.2f, v_new=%.2f, inter_code=%d", dist_to_goal, pos_tol_, relative_direction, v_target_mag, v_new_mag, inter_code_);
         }else if(move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
             
             const double w_target_mag = braking_speed(yaw_to_goal,angular_acceleration_);
@@ -167,8 +166,12 @@ private:
             
             msg.linear.x = 0.0;
             msg.linear.y = 0.0;
-            if(move_mode_ / 10 == 2) msg.angular.z = -w_new_mag; //clockwise
-            else                     msg.angular.z = w_new_mag; //counterclockwise
+            if(move_mode_ / 10 == 2){
+                msg.angular.z = -w_new_mag; //clockwise
+            }else{
+                msg.angular.z = w_new_mag; //counterclockwise
+            }
+
             if(move_mode_ % 10 == 1){
                 msg.linear.z = 2.0;
             }else{
@@ -179,12 +182,14 @@ private:
             msg.linear.y = 0.0;
             msg.linear.z = 0.0;
             msg.angular.z = 0.0;
+            RCLCPP_INFO(this->get_logger(), "ChassisPilot reset down.");
         }
         
         velocity_publisher_->publish(msg);
     }
 
     bool complete_goal() { 
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "trace_reached=%d, move_mode=%d", trace_reached_, move_mode_);
         if (move_mode_ / 10 == 4) {
             return translation_complete();
         }
@@ -195,7 +200,10 @@ private:
                 return rotation_complete();
             }
         }
-        return (translation_complete() && rotation_complete());
+        else if (move_mode_ / 10 == 2 || move_mode_ / 10 == 3) {
+            return rotation_complete() && translation_complete();
+        }
+        return false;
     }
 
     bool translation_complete() {
@@ -209,7 +217,7 @@ private:
     void reset_twist(geometry_msgs::msg::Twist &msg) {
         msg.linear.x = 0;
         msg.linear.y = 0;
-        msg.linear.z = 0;
+        // msg.linear.z = 0;
         msg.angular.x = 0;
         msg.angular.y = 0;
         msg.angular.z = 0;
@@ -231,8 +239,8 @@ private:
         dist_to_goal = std::hypot(goal_x_ - x_, goal_y_ - y_);
         yaw_to_goal = ang_norm(goal_yaw_ - yaw_);
         if(move_mode_ % 10 == 1) {
-            dist_buffer_ = std::max(dist_buffer_, dist_to_goal);
-            yaw_buffer_ = std::max(yaw_buffer_, std::abs(yaw_to_goal));
+            dist_buffer_ = std::max(pos_tol_-5, dist_to_goal);
+            yaw_buffer_ = std::max(yaw_tol_ -0.5, std::abs(yaw_to_goal));
         }
     }
 
@@ -240,25 +248,26 @@ private:
     double x_ {0.0},y_ {0.0},yaw_ {0.0};
     double vx_meas_ {0.0},vy_meas_ {0.0},wz_meas_ {0.0};
     bool have_state_ {false};
+    bool oscillation[4] {false,false,false,false};
     //goal
     double goal_x_ {0.0},goal_y_ {0.0},goal_yaw_ {0.0};
-    bool have_goal_ {false};
     bool trace_reached_{true};
     //parameter
-    double pos_tol_ {12}, yaw_tol_ {0.1};
+    double pos_tol_ {2}, yaw_tol_ {0.1};
     int log_throttle_ms_ {20000};
     double dist_to_goal {0.0}, yaw_to_goal {0.0};
-    double dist_buffer_ {20.0}, yaw_buffer_ {0.5};
-    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {1.5}, angular_acceleration_ {0.1},min_linear_speed_ {3.0},min_angular_speed_ {0.1};//cm/s
+    double dist_buffer_ {30.0}, yaw_buffer_ {0.5};
+    double max_linear_speed_ {20.0}, max_angular_speed_ {1.5}, linear_acceleration_ {2.0}, angular_acceleration_ {0.1},min_linear_speed_ {3.0},min_angular_speed_ {0.1};//cm/s
     double linear_velocity_now_ {0.0}, angular_velocity_now_ {0.0};
     double control_dt_ {0.05};   
     int move_mode_ {10}; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 40: no slowdown, 01: trace, 00: not trace
     int inter_code_ {0};
 
+    rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr       mission_command_sub_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr     velocity_publisher_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr    position_subscriber_;
     rclcpp::Service<interfaces::srv::GoalPoint>::SharedPtr      goal_server_;
-      rclcpp::TimerBase::SharedPtr  timer_;
+    rclcpp::TimerBase::SharedPtr  timer_;
 
 };
 

@@ -67,7 +67,7 @@ class Coffee(Node):
     def menu_callback(self, request, response):
         if request.start:
             self.start = True 
-            deadline = time.time() + 30.0
+            deadline = time.time() + 10.0
             while time.time() < deadline:
                 if self.color_idx >= 0 and self.table_id >= 0:
                     result = self.color_idx * 10 + self.table_id

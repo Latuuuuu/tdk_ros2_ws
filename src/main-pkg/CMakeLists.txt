@@ -33,6 +33,10 @@ add_executable(MissionTwo src/mission_two.cpp)
 ament_target_dependencies(MissionTwo rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(MissionTwo PRIVATE include)
 
+add_executable(MissionThree src/mission_three.cpp)
+ament_target_dependencies(MissionThree rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
+target_include_directories(MissionThree PRIVATE include)
+
 add_executable(MissionFour src/mission_four.cpp)
 ament_target_dependencies(MissionFour rclcpp nav_msgs std_msgs geometry_msgs rcl_interfaces visualization_msgs interfaces)
 target_include_directories(MissionFour PRIVATE include)
@@ -51,6 +55,7 @@ install(TARGETS
   ChassisPilot
   MissionOne
   MissionTwo
+  MissionThree
   MissionFour
   MissionManager
   DESTINATION lib/${PROJECT_NAME})

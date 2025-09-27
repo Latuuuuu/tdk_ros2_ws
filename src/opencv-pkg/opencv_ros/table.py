@@ -179,7 +179,7 @@ class Table(Node):
                 self.location = None
                 self.last_corners = None
                 
-                deadline = time.time() + 30.0
+                deadline = time.time() + 10.0
                 while time.time() < deadline:
                     ready_intrinsics = all(v is not None for v in [self.fx, self.fy, self.cx, self.cy])
                     

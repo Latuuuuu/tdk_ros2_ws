@@ -34,6 +34,9 @@ private:
             RCLCPP_INFO(this->get_logger(), "Starting Mission Two...");
             current_mission_ = 2;
         } else if (current_mission_ == 2) {
+            RCLCPP_INFO(this->get_logger(), "Starting Mission Three...");
+            current_mission_ = 3;
+        } else if (current_mission_ == 3) {
             RCLCPP_INFO(this->get_logger(), "Starting Mission Four...");
             current_mission_ = 4;
         } else if (current_mission_ == 0) {
@@ -59,6 +62,10 @@ private:
             std_msgs::msg::Int32 cmd;
             cmd.data = 2;
             mission_command_pub_->publish(cmd);
+        }else if (current_mission_ == 3) {
+            std_msgs::msg::Int32 cmd;
+            cmd.data = 3;
+            mission_command_pub_->publish(cmd);
         }else if (current_mission_ == 4) {
             std_msgs::msg::Int32 cmd;
             cmd.data = 4;
@@ -75,7 +82,9 @@ private:
     }
 
     void mission_starter_callback(const std_msgs::msg::Int32::SharedPtr msg){
-        current_mission_=msg->data;
+        if(msg != 0){
+            current_mission_=msg->data;
+        }
     }
 
     int current_mission_;

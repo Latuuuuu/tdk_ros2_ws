@@ -71,7 +71,7 @@ RUN chown root:root /ros_entrypoint.sh && \
     chmod 755 /ros_entrypoint.sh && \
     sh /tmp/install_depend.sh
 
-USER $USERNAME
+# USER $USERNAME
 
 RUN mkdir -p /home/$USERNAME/tdk_ros2_ws
 

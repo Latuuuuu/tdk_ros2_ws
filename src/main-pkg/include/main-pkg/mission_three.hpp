@@ -11,57 +11,80 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "std_msgs/msg/int32.hpp"
 
-class MissionFour : public rclcpp::Node {
+class MissionThree : public rclcpp::Node {
 public:
-    MissionFour() : Node("mission_4") {
+    MissionThree() : Node("mission_3") {
         // 建立目標點的 client
-        mission_command_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_command", 10, std::bind(&MissionFour::mission_command_callback, this, std::placeholders::_1));
+        mission_command_sub_ = this->create_subscription<std_msgs::msg::Int32>("/mission_command", 10, std::bind(&MissionThree::mission_command_callback, this, std::placeholders::_1));
         mission_status_pub_ = this->create_publisher<std_msgs::msg::Int32>("/mission_status", 10);
         goal_client_ = this->create_client<interfaces::srv::GoalPoint>("/goal");
         arm_cmd_pub_ = this->create_publisher<std_msgs::msg::Int32>("/robot/cmd_arm", 10);
-        arm_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/robot/arm_status", 10,std::bind(&MissionFour::arm_status_callback, this, std::placeholders::_1));
+        arm_status_sub_ = this->create_subscription<std_msgs::msg::Int32>("/robot/arm_status", 10,std::bind(&MissionThree::arm_status_callback, this, std::placeholders::_1));
 
 
         // 初始化目標點序列
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(20),std::bind(&MissionFour::check_and_send_goal, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(20),std::bind(&MissionThree::check_and_send_goal, this));
 
-        RCLCPP_INFO(this->get_logger(), "MissionFour started.");
+        RCLCPP_INFO(this->get_logger(), "MissionThree started.");
     }
 
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        // goals_.push_back(create_goal(0, -500.0, 500.0, 0.0, 10, 0, 100.0, 0.5)); 
+        // goals_.push_back(create_goal(0, -267.0, 616.0, -1.57, 10, 0, 0, 30.0, 0.5, 5)); //第二關終點
+        // goals_.push_back(create_goal(0, -267.0, 616.0, -1.57, 30, 0, 0, 30.0, 0.5, 5)); //第二關終點
 
-        goals_.push_back(create_goal(0, -487.0, 330.0, 3.14, 10, 0, 30.0, 0.5)); 
+        goals_.push_back(create_goal(0, -280.0, 672.0, -1.57, 10, 0, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -280.0, 672.0, -1.57, 20, 0, 0, 30.0, 0.5));
 
-        goals_.push_back(create_goal(0, -487.0, 260.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -304.0, 672.0, -1.57, 10, 0, 0, 30.0, 0.5));
 
-        goals_.push_back(create_goal(0, -462.0, 205.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(3, -304.0, 672.0, -1.57, 10, 0, 5));
 
-        goals_.push_back(create_goal(0, -252.0, 185.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -304.0, 335.0, 1.57, 40, 0, 0, 40.0, 0.5));
+        goals_.push_back(create_goal(0, -304.0, 335.0, 1.57, 30, 0, 0, 30.0, 0.5));
 
-        goals_.push_back(create_goal(0, -252.0, 115.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -487.0, 335.0, 1.57, 11, 0, 0, 30.0, 0.5, 6));
 
-        goals_.push_back(create_goal(0, -607.0, 90.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -602.0, 335.0, -1.57, 41, 0, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -602.0, 335.0, -1.57, 20, 0, 0, 30.0, 0.5));
 
-        goals_.push_back(create_goal(0, -607.0, 10.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(3, -602.0, 335.0, -1.57, 11, 0, 6));
 
-        goals_.push_back(create_goal(0, -447.0, 0.0, 3.14, 10, 0, 30.0, 0.5));
+        goals_.push_back(create_goal(0, -587.0, 335.0, -1.57, 40, 0, 0, 30.0, 0.5));
+
+        goals_.push_back(create_goal(0, -487.0, 335.0, 3.14, 11, 0, 0, 30.0, 0.5, 6));
+        goals_.push_back(create_goal(0, -487.0, 335.0, 3.14, 20, 0, 0, 30.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -492.0, 335.0, 3.14, 10, 0, 20.0, 0.5, 6)); 
+
+        // goals_.push_back(create_goal(0, -487.0, 260.0, 3.14, 10, 0, 20.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -462.0, 205.0, 3.14, 10, 0, 20.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -262.0, 185.0, 3.14, 10, 0, 20.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -262.0, 115.0, 3.14, 10, 0, 20.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -602.0, 90.0, 3.14, 10, 0, 20.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -602.0, 10.0, 3.14, 10, 0, 20.0, 0.5));
+
+        // goals_.push_back(create_goal(0, -447.0, 0.0, 3.14, 10, 0, 20.0, 0.5));
 
     }
 
     void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
-        if (msg->data == 4 && !node_started_) {
+        if (msg->data == 3 && !node_started_) { 
             waiting_for_response_ = false;
             pending_arm_cmd_ = 0;
             waiting_for_arm_ = false;
             node_started_ = true;
         }
-        if(msg->data == -1 && node_started_){
+        if((msg->data == -1 || msg->data == 4) && node_started_){
             node_started_ = false;
             goals_.clear();
             initialize_goals();
@@ -76,6 +99,7 @@ private:
 
         if (goals_.empty()) {
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "All goals completed.");
+            // rclcpp::shutdown();
             std_msgs::msg::Int32 status;
             status.data = 4; // Mission Four 的 ID
             mission_status_pub_->publish(status);
@@ -100,7 +124,7 @@ private:
             request->max_angular_speed = goals_.front().max_angular_speed;
             request->move_mode = goals_.front().move_mode;
             request->inter_code = goals_.front().inter_code;
-            auto future = goal_client_->async_send_request(request,std::bind(&MissionFour::goal_response_callback, this, std::placeholders::_1));
+            auto future = goal_client_->async_send_request(request,std::bind(&MissionThree::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
         }
@@ -121,6 +145,7 @@ private:
         if (response->status) {
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Goal reached.");
             goals_.erase(goals_.begin());
+            
         }
         waiting_for_response_ = false;
     }
@@ -153,7 +178,7 @@ private:
         int inter_code;
     };
 
-    Goal create_goal(int type,double x, double y, double yaw, int move_mode, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5, int inter_code = 0) {
+    Goal create_goal(int type,double x, double y, double yaw, int move_mode, bool start, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5, int inter_code = 0) {
         Goal goal;
         goal.type = type;
         goal.pose.pose.position.x = x;
@@ -162,6 +187,7 @@ private:
         goal.max_linear_speed = max_linear_speed;
         goal.max_angular_speed = max_angular_speed;
         goal.move_mode = move_mode;
+        goal.start = start;
         goal.arm_cmd = arm_cmd;
         goal.inter_code = inter_code;
         return goal;

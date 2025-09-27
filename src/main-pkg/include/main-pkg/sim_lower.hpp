@@ -79,7 +79,7 @@ private:
   const std::string child_frame_id_{"base_link"};
 
   // 狀態
-  double x_{0.0}, y_{0.0}, yaw_{0.0};
+  double x_{0.0}, y_{540.0}, yaw_{0.0};
   double vx_{0.0}, vy_{0.0}, wz_{0.0};
   rclcpp::Time last_step_time_;
 

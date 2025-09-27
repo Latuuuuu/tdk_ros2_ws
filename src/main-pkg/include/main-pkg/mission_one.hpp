@@ -23,7 +23,7 @@ public:
         initialize_goals();
 
         // 計時器，用於檢查目標完成狀態並發送下一個目標
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(100),std::bind(&MissionOne::check_and_send_goal, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(20),std::bind(&MissionOne::check_and_send_goal, this));
 
         RCLCPP_INFO(this->get_logger(), "MissionOne started.");
     }
@@ -31,22 +31,19 @@ public:
 private:
     void initialize_goals() {
         // 初始化目標點序列
-        goals_.push_back(create_goal(0, 0.0, 140.0, 0.0, 41, 0, 30.0, 0.5)); 
-        goals_.push_back(create_goal(0, 0.0, 390.0, 0.0, 41, 0, 30.0, 0.5)); 
-        goals_.push_back(create_goal(0, 0.0, 616.0, 0.0, 11, 0, 25.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 10.0, 0.0, 40, 0, 45.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 390.0, 0.0, 41, 0, 45.0, 0.5)); 
+        goals_.push_back(create_goal(0, 0.0, 616.0, 0.0, 11, 0, 45.0, 0.5, 2)); 
+        goals_.push_back(create_goal(0, 0.0, 616.0, 4.71, 20, 0, 45.0, 0.5, 2));
 
     }
 
     void mission_command_callback(const std_msgs::msg::Int32::SharedPtr msg) {
-        if (msg->data == 1 && !node_started_) { // 假設 4 是啟動 Mission Four 的命令
-            // RCLCPP_INFO(this->get_logger(), "Mission Four command received.");
-            // 重新初始化目標點序列
-            // goals_.clear();
-            // initialize_goals();
+        if (msg->data == 1 && !node_started_) { 
             waiting_for_response_ = false;
             node_started_ = true;
         }
-        if(msg->data == -1 && node_started_){
+        if((msg->data == -1 || msg->data == 2) && node_started_){
             node_started_ = false;
             goals_.clear();
             initialize_goals();
@@ -85,6 +82,7 @@ private:
             request->max_linear_speed = goals_.front().max_linear_speed;
             request->max_angular_speed = goals_.front().max_angular_speed;
             request->move_mode = goals_.front().move_mode;
+            request->inter_code = goals_.front().inter_code;
             auto future = goal_client_->async_send_request(request,std::bind(&MissionOne::goal_response_callback, this, std::placeholders::_1));
             waiting_for_response_ = true;
             RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 20000, "Sent goal: x=%.2f, y=%.2f", request->goal.pose.position.x, request->goal.pose.position.y);
@@ -111,9 +109,10 @@ private:
         bool start;
         int arm_cmd ;
         int move_mode; //10: translation, 20: rotation clockwise, 30: rotation counterclockwise, 01: trace, 00: not trace
+        int inter_code;
     };
 
-    Goal create_goal(int type,double x, double y, double yaw, int move_mode, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5) {
+    Goal create_goal(int type,double x, double y, double yaw, int move_mode, int arm_cmd, double max_linear_speed = 20.0, double max_angular_speed = 0.5, int inter_code = 2) {
         Goal goal;
         goal.type = type;
         goal.pose.pose.position.x = x;
@@ -123,6 +122,7 @@ private:
         goal.max_angular_speed = max_angular_speed;
         goal.move_mode = move_mode;
         goal.arm_cmd = arm_cmd;
+        goal.inter_code = inter_code;
         return goal;
     }
 

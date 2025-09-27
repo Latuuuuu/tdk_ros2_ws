@@ -19,6 +19,7 @@ def generate_launch_description():
         Node(package='main-pkg', executable='ChassisPilot', output='screen'),
         Node(package='main-pkg', executable='MissionOne',   output='screen'),
         Node(package='main-pkg', executable='MissionTwo',   output='screen'),
+        Node(package='main-pkg', executable='MissionThree', output='screen'),
         Node(package='main-pkg', executable='MissionFour',  output='screen'),
 
     ])
